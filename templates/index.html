@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Mechanics</title>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Our minimal styles -->
+  <link rel="stylesheet" href="static/style.css">
+  
+  <meta name="description" content="The mathematical science of neural network training">
+</head>
+<body>
+  <a href="index.html" class="home-glyph"><i class="fas fa-home"></i></a>
+  <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-sun"></i></button>
+
+  <header>
+    <h1>Learning Mechanics</h1>
+    <p class="site-subtitle">The mathematical science of neural network training</p>
+    <hr class="header-separator">
+    <div class="site-description">
+      <p>Understanding deep learning will be <em>the</em> intellectual challenge of the early 21st century, like physics was in the early 20th. A good place to start is the study of neural network <em>training dynamics</em>, since these give rise to everything else. The study of learning mechanics is rapidly developing into a proper subfield of science. This website is meant to serve as a hub, a place to share progress and organize the search for simple, useful understanding.</p>
+    </div>
+    <hr class="header-separator">
+  </header>
+
+  <main>
+    <div class="post-list">
+      <!-- POSTS_PLACEHOLDER -->
+    </div>
+    
+    
+    <footer>
+      <!-- <p><a href="feed.xml">RSS Feed</a></p> -->
+    </footer>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // Update button icon
+      const icon = document.querySelector('.theme-toggle i');
+      icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // Update button icon
+      const icon = document.querySelector('.theme-toggle i');
+      icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    });
+  </script>
+</body>
+</html> 
