@@ -22,7 +22,13 @@
       "WebFetch(domain:giscus.app)",
       "WebSearch",
       "Bash(python3:*)",
-      "Bash(pip3 install:*)"
+      "Bash(pip3 install:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": [],
