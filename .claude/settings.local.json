@@ -20,7 +20,9 @@
       "WebFetch(domain:analyticinterp.github.io)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:giscus.app)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": [],
     "ask": [],

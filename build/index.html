@@ -3,89 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learning Mechanics</title>
-  
+  <title>The Real Feature Lab</title>
+
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+
   <!-- Our minimal styles -->
   <link rel="stylesheet" href="static/style.css">
-  
-  <meta name="description" content="The mathematical science of neural network training">
+
+  <meta name="description" content="gettin' flabby since 2025">
 </head>
 <body>
   <a href="index.html" class="home-glyph"><i class="fas fa-home"></i></a>
   <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-sun"></i></button>
 
   <header>
-    <h1>Learning Mechanics</h1>
-    <p class="site-subtitle">The mathematical science of neural network training</p>
-    <hr class="header-separator">
-    <div class="site-description">
-      <p>Understanding deep learning will be <em>the</em> intellectual challenge of the early 21st century, like physics was in the early 20th. A good place to start is the study of neural network <em>training dynamics</em>, since these give rise to everything else. The study of learning mechanics is rapidly developing into a proper subfield of science. This website is meant to serve as a hub, a place to share progress and organize the search for simple, useful understanding.</p>
-    </div>
-    <hr class="header-separator">
+    <h1>gettin' flabby since 2025</h1>
   </header>
-
-  <main>
-    <div class="post-list">
-            <div class="sequence-box" onclick="location.href='quickstart/introduction.html'">
-        <div class="sequence-title">A Quickstart Guide to Learning Mechanics</div>
-        <div class="sequence-author">[long list of authors]</div>
-        <div class="sequence-date">September 01, 2025</div>
-        <div class="sequence-posts">
-          <a href="quickstart/introduction.html" class="post-link" onclick="event.stopPropagation()">1. Introduction: what do you want to understand?</a>
-          <a href="quickstart/hidden-representations.html" class="post-link" onclick="event.stopPropagation()">2. ...the average size of hidden representations?</a>
-          <a href="quickstart/hyperparameter-selection.html" class="post-link" onclick="event.stopPropagation()">3. ...hyperparameter selection (and why should theorists care)?</a>
-          <a href="quickstart/optimization.html" class="post-link" onclick="event.stopPropagation()">4. 🚧 ...the convergence and stability of optimization?</a>
-          <a href="quickstart/feature-learning.html" class="post-link" onclick="event.stopPropagation()">5. 🚧 ...feature learning and the final network weights?</a>
-          <a href="quickstart/generalization.html" class="post-link" onclick="event.stopPropagation()">6. 🚧 ...generalization?</a>
-          <a href="quickstart/sparsity.html" class="post-link" onclick="event.stopPropagation()">7. 🚧 ...neuron-level sparsity?</a>
-          <a href="quickstart/data-structure.html" class="post-link" onclick="event.stopPropagation()">8. 🚧 ...the structure in the data?</a>
-          <a href="quickstart/conclusion.html" class="post-link" onclick="event.stopPropagation()">9. 🚧 Places to make a difference</a>
-        </div>
-      </div>
-      <div class="sequence-box" onclick="location.href='science-of-dl/long-run-payoff.html'">
-        <div class="sequence-title">Notes on the Science of Deep Learning</div>
-        <div class="sequence-author">Jamie Simon, Florentin Guth, Dhruva Karkada</div>
-        <div class="sequence-date">August 30, 2025</div>
-        <div class="sequence-posts">
-          <a href="science-of-dl/long-run-payoff.html" class="post-link" onclick="event.stopPropagation()">1. 🚧 Understanding deep learning will pay off in the long run</a>
-          <a href="science-of-dl/scientific-method.html" class="post-link" onclick="event.stopPropagation()">2. The scientific method in two steps and its application to deep learning</a>
-          <a href="science-of-dl/science-as-mapmaking.html" class="post-link" onclick="event.stopPropagation()">3. 🚧 Science as mapmaking</a>
-        </div>
-      </div>
-      <div class="sequence-box" onclick="location.href='optimization-myths.html'">
-        <div class="sequence-title">Three Myths about Optimization in Deep Learning</div>
-        <div class="sequence-author">Jeremy Cohen</div>
-        <div class="sequence-date">August 22, 2025</div>
-      </div>
-    </div>
-    
-    
-    <footer>
-      <!-- <p><a href="feed.xml">RSS Feed</a></p> -->
-    </footer>
-  </main>
 
   <script>
     function toggleTheme() {
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      
+
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
-      
+
       // Update button icon
       const icon = document.querySelector('.theme-toggle i');
       icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
-    
+
     // Initialize theme on page load
     document.addEventListener('DOMContentLoaded', function() {
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
-      
+
       // Update button icon
       const icon = document.querySelector('.theme-toggle i');
       icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';

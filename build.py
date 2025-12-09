@@ -449,11 +449,11 @@ def main():
     
     # Find all markdown files (including in subdirectories)
     markdown_files = list(posts_dir.rglob('*.md'))
-    
+
     if not markdown_files:
         print("No markdown files found in posts/")
-        return
-    
+        markdown_files = []
+
     # Load sequence metadata
     sequence_metadata = load_sequence_metadata()
     
@@ -537,13 +537,13 @@ def main():
             posts.append(built_metadata)
     
     # Generate index and RSS
+    generate_index(posts, output_dir)
     if posts:
-        generate_index(posts, output_dir)
         generate_rss(posts, output_dir)
-    
+
     # Copy static files
     copy_static_files(output_dir)
-    
+
     print(f"\n✓ Build complete! Generated {len(posts)} posts.")
     print(f"  Output in: {output_dir.absolute()}")
     print(f"  Ready for GitHub Pages deployment from build/ directory")
