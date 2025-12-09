@@ -435,7 +435,12 @@ def copy_static_files(output_dir):
     nojekyll_file = Path('.nojekyll')
     if nojekyll_file.exists():
         (output_dir / '.nojekyll').write_bytes(nojekyll_file.read_bytes())
-    
+
+    # Copy CNAME file for custom domain support
+    cname_file = Path('CNAME')
+    if cname_file.exists():
+        (output_dir / 'CNAME').write_bytes(cname_file.read_bytes())
+
     print("✓ Copied static files")
 
 def main():
