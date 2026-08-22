@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PixelPass } from './pixelpass.js';
 import { BloomPass } from './bloompass.js';
 import {
-  PIXEL_SIZE, BLOOM_THRESHOLD, BLOOM_GLOW, BLOOM_RADIUS,
+  PIXELATE_ON, PIXEL_SIZE, BLOOM_ON, BLOOM_THRESHOLD, BLOOM_GLOW, BLOOM_RADIUS,
 } from '../config.js';
 
 // ---------------------------------------------------------------------------
@@ -18,9 +18,9 @@ export class PostFX {
   constructor(renderer) {
     this.renderer = renderer;
 
-    this.pixel = new PixelPass(renderer, { pixelSize: PIXEL_SIZE, enabled: true });
+    this.pixel = new PixelPass(renderer, { pixelSize: PIXEL_SIZE, enabled: PIXELATE_ON });
     this.bloom = new BloomPass(renderer, {
-      enabled: true,
+      enabled: BLOOM_ON,
       threshold: BLOOM_THRESHOLD,
       glow: BLOOM_GLOW,
       radius: BLOOM_RADIUS,

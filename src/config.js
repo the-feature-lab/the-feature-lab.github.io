@@ -26,7 +26,8 @@ export const FLAB = [
 
 export const CUBE_SIZE = 0.8;      // cube edge length (world units, pre-scale)
 export const CELL = 1.0;           // grid pitch (CUBE_SIZE < CELL => small gaps)
-export const DEFAULT_CUBE_COLOR = 0x66ccff; // starting cube color (live-editable)
+export const DEFAULT_CUBE_COLOR = 0x85e0ff; // starting cube color (live-editable)
+export const DEFAULT_BRIGHTNESS = 2.0;      // starting light-brightness multiplier
 
 // FLAB placement: the camera stays centered on the origin (so the origin-centered
 // star sphere stays centered on screen); to make FLAB appear smaller and shifted
@@ -45,8 +46,10 @@ export const VIEW_HEIGHT = 14;     // world height shown on screen (ortho)
 export const CAMERA_POS = [-4, 3, 21];
 
 // --- Post-processing ------------------------------------------------------
-export const PIXEL_SIZE = 3;       // pixelation block edge in CSS pixels
+export const PIXELATE_ON = true;   // pixelation enabled by default
+export const PIXEL_SIZE = 2;       // pixelation block edge in CSS pixels
 export const STAR_BASE_PX = 3;     // star point size (CSS px) when pixelation is off
+export const BLOOM_ON = false;     // glow disabled by default
 export const BLOOM_THRESHOLD = 0.25; // brightness above which a pixel glows
 export const BLOOM_GLOW = 0.5;       // convex mix: 0 = off, 1 = fully blurred glow
 export const BLOOM_RADIUS = 10;      // blur length-scale in output pixels

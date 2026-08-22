@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GUI } from 'lil-gui';
 import {
-  DEFAULT_CUBE_COLOR, PIXEL_SIZE, BLOOM_GLOW, BLOOM_THRESHOLD, BLOOM_RADIUS,
-  SETTINGS_KEY,
+  DEFAULT_CUBE_COLOR, DEFAULT_BRIGHTNESS, PIXEL_SIZE,
+  BLOOM_GLOW, BLOOM_THRESHOLD, BLOOM_RADIUS, SETTINGS_KEY,
 } from '../config.js';
 
 // ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ export function initSettings(ctx) {
   const settings = {
     cube: '#' + new THREE.Color(DEFAULT_CUBE_COLOR).getHexString(),
     keyDir: `(${lighting.key.position.x}, ${lighting.key.position.y}, ${lighting.key.position.z})`,
-    brightness: 1.0,
+    brightness: DEFAULT_BRIGHTNESS,
     frogs: true,
     pixelate: postfx.pixel.enabled,
     pixelSize: PIXEL_SIZE,
