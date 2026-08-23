@@ -116,17 +116,16 @@ export class BloomPass {
       depthWrite: false,
     });
 
-    // Composite: convex blend of the blurred glow and the base image:
-    //   out = glow * blur + (1 - glow) * base
-    // Energy-preserving, so a large flat region (where blur ~= base) keeps its
-    // color at any glow factor — glow only shows where there's contrast. The
-    // blur is fed by the bright-pass, so unlit areas just get scaled by
-    // (1 - glow) and darken slightly; that's the accepted trade-off.
+    // Composite: the halo bleeds ONLY into empty (black) space — bright shapes
+    // glow outward into the dark without the scene itself getting blurrier.
+    //   out = base + glow * bloom * emptyMask
+    // where emptyMask ~ 1 where base is black and ~ 0 where base has content, so
+    // any non-empty pixel is left exactly unchanged. `glow` is the halo strength.
     this.compositeMat = new THREE.ShaderMaterial({
       uniforms: {
         tBase: { value: null },
         tBloom: { value: null },
-        uGlow: { value: glow }, // convex mix factor, 0..1
+        uGlow: { value: glow }, // halo strength (0 = none)
       },
       vertexShader: VERT,
       fragmentShader: /* glsl */ `
@@ -148,7 +147,11 @@ export class BloomPass {
         void main() {
           vec3 base = texture2D(tBase, vUv).rgb;
           vec3 bloom = texture2D(tBloom, vUv).rgb;
-          vec3 outc = mix(base, bloom, uGlow); // (1-uGlow)*base + uGlow*bloom
+          // Empty-space mask: 1 where the base pixel is (near) black, fading to 0
+          // as it gains any brightness — so lit pixels stay untouched (no blur).
+          float baseLum = max(base.r, max(base.g, base.b));
+          float emptyMask = 1.0 - smoothstep(0.0, 0.02, baseLum);
+          vec3 outc = base + uGlow * bloom * emptyMask;
           gl_FragColor = vec4(linearToSRGB(outc), 1.0);
         }
       `,

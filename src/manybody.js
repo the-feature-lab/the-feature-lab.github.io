@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Timer } from 'three';
 import { SUBSTEPS } from './config.js';
 import { PhysicsWorld } from './engine/physics.js';
 import { computeEnergies } from './engine/energy.js';
@@ -117,11 +118,12 @@ function updateHUD(dt) {
 }
 
 // --- Render loop ----------------------------------------------------------
-const clock = new THREE.Clock();
+const timer = new Timer();
 
 function animate() {
   requestAnimationFrame(animate);
-  const rawDt = clock.getDelta();     // true frame time (for FPS)
+  timer.update();
+  const rawDt = timer.getDelta();     // true frame time (for FPS)
   const dt = Math.min(rawDt, 0.033);  // clamped (for physics stability)
 
   physics.step(dt, SUBSTEPS);

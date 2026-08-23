@@ -26,7 +26,7 @@ export const FLAB = [
 
 export const CUBE_SIZE = 0.8;      // cube edge length (world units, pre-scale)
 export const CELL = 1.0;           // grid pitch (CUBE_SIZE < CELL => small gaps)
-export const DEFAULT_CUBE_COLOR = 0x85e0ff; // starting cube color (live-editable)
+export const DEFAULT_CUBE_COLOR = 0xf5e9d0; // starting cube color — matches SIGN_TEXT_COLOR (cream)
 export const DEFAULT_BRIGHTNESS = 2.0;      // starting light-brightness multiplier
 
 // FLAB placement: the camera stays centered on the origin (so the origin-centered
@@ -51,8 +51,30 @@ export const PIXEL_SIZE = 2;       // pixelation block edge in CSS pixels
 export const STAR_BASE_PX = 3;     // star point size (CSS px) when pixelation is off
 export const BLOOM_ON = false;     // glow disabled by default
 export const BLOOM_THRESHOLD = 0.25; // brightness above which a pixel glows
-export const BLOOM_GLOW = 0.5;       // convex mix: 0 = off, 1 = fully blurred glow
+export const BLOOM_GLOW = 1.0;       // halo strength bleeding into empty/black space
 export const BLOOM_RADIUS = 10;      // blur length-scale in output pixels
+
+// --- Sign (floating text + hovering outline) ------------------------------
+// A light, stripped-down sign: cream letters floating with a thin cream border
+// outline centered on the main plane — no background, sharp corners, so it
+// stays subordinate to FLAB.
+export const SIGN_TEXT_COLOR = 0xf5e9d0;   // soft creamy off-white (warm incandescent)
+export const SIGN_BORDER_COLOR = 0xf5e9d0; // border matches the text
+export const SIGN_LINE_GAP = 0.5;          // vertical gap between the two lines (× size units)
+export const SIGN_PAD_X = 0.45;            // horizontal padding text→border (world units)
+export const SIGN_PAD_Y = 0.32;            // vertical padding text→border
+export const SIGN_BORDER = 0.09;           // border rail width, in-plane (thin)
+export const SIGN_TEXT_DEPTH = 0.18;       // how far letters extrude off the plane
+export const SIGN_BORDER_DEPTH = 0.1;      // border thickness in Z (thin), centered on z=0
+
+// --- Planets (nav) --------------------------------------------------------
+// Each planet is placed at an explicit pos (see main.js); no arc parameterizing,
+// so planets can go anywhere as more are added.
+export const PLANET_LABEL_SIZE = 0.3;  // label font size (smaller than the sign)
+export const PLANET_LABEL_GAP = 0.7;   // gap from planet top to its label
+export const PLANET_LABEL_COLOR = 0xf5e9d0; // cream, matching the sign
+export const PLANET_HOVER_SCALE = 1.125; // enlargement factor on hover (subtle)
+export const PLANET_HOVER_SPEED = 8.0;   // scale-lerp rate (higher = snappier)
 
 // --- Frog -----------------------------------------------------------------
 export const FROG_COUNT = 20;        // how many frogs roam the letters
