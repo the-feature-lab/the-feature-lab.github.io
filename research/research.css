@@ -1,0 +1,73 @@
+/* Research page — artifacts grouped by kind (papers, then essays/blogposts).
+   All-blocky like the People page, but NOT all-caps: titles here are long
+   enough that uppercase becomes hard to read. Titles are stored sentence-cased
+   in src/data/research.js and rendered as authored. Kept separate from site.css
+   so the shared chrome stays untouched. */
+
+.artifact-group + .artifact-group { margin-top: 40px; }
+
+/* Section heading ("Papers", "Essays and blogposts"). */
+.artifact-group h2 {
+  font-family: 'Jersey 10', monospace;
+  font-weight: normal;
+  font-size: 34px;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+.artifact-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.artifact {
+  font-family: 'Jersey 10', monospace;
+  font-size: 26px;
+  line-height: 1.25;
+  margin: 0 0 18px;
+}
+
+/* Title line: the title links out to the artifact's primary link. */
+.artifact-title a {
+  color: var(--ink);
+}
+
+.artifact-title a:hover {
+  color: var(--accent);
+}
+
+/* Venue/year and any secondary links trail the title, dimmed. */
+.artifact-meta {
+  color: var(--muted);
+}
+
+.artifact-meta a {
+  color: var(--muted);
+}
+
+.artifact-meta a:hover {
+  color: var(--accent);
+}
+
+/* Author line, a size down and dimmed so titles stay dominant. */
+.artifact-authors {
+  font-size: 20px;
+  color: var(--muted);
+}
+
+/* Equal-contribution marker. */
+.artifact-authors sup {
+  font-size: 0.7em;
+  vertical-align: super;
+}
+
+/* Intro prose above the lists. Left in the page's display font to match, but
+   at reading size and dimmed so the section headings still lead. */
+.page-blurb {
+  font-family: 'Jersey 10', monospace;
+  font-size: 24px;
+  color: var(--muted);
+  margin: 0 0 34px;
+}

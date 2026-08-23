@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Research — the feature lab</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
+  <!-- Paint dark immediately so there's no white flash before the CSS loads. -->
+  <style>html,body{background:#05060a;margin:0}</style>
+  <!-- Preload the display font so it's ready before first paint (avoids FOUT). -->
+  <link rel="preload" href="/fonts/Jersey10.ttf" as="font" type="font/ttf" crossorigin />
 </head>
 <body>
   <main>
-    <h1>RESEARCH</h1>
-    <p>Placeholder content for the Research page. Our work on the fundamental
-      science of AI will be described here.</p>
+    <div class="page-title"><h1>RESEARCH</h1></div>
+    <p class="page-blurb">[blurb to be written]</p>
+    <!-- Artifacts are rendered by research.js from src/data/research.js. -->
+    <div id="artifacts" class="artifacts"></div>
   </main>
   <script type="module" src="./research.js"></script>
 </body>

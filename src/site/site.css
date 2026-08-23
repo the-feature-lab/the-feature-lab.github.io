@@ -1,18 +1,25 @@
-/* Shared styles for the traditional content pages (RESEARCH/PEOPLE/ABOUT).
-   Bare-structure scaffold: dark on-theme background, Jersey 10 headings,
-   readable body text, a simple top navbar. */
+/* Shared styles for the content pages (RESEARCH/PEOPLE/ABOUT).
+   Dark/space theme matching the landing scene; Jersey 10 headings; a black
+   navbar with cream text (the active item colored its planet's primary hue) and
+   a tiny planet beside each item. Each page sets its own --accent (its planet's
+   primary color) inline; the page title takes that color and gets its own mini
+   planet beside it. */
 
 @font-face {
   font-family: 'Jersey 10';
   src: url('/fonts/Jersey10.ttf') format('truetype');
-  font-display: swap;
+  /* block: briefly hide text and wait for the real font instead of flashing a
+     fallback then swapping (which caused the "text shows up then changes"). */
+  font-display: block;
 }
 
 :root {
-  --bg: #0a0a12;
-  --fg: #f5e9d0;        /* cream, matching the scene text */
+  --bg: #05060a;             /* near-black space background */
+  --ink: #f5e9d0;            /* cream text, matching the scene */
   --muted: #b9b2a0;
-  --accent: #85e0ff;
+  --rule: rgba(245, 233, 208, 0.35);
+  --accent: #f5e9d0;         /* page primary color; each page overrides inline */
+  --accent-2: var(--accent); /* page secondary; falls back to primary for now */
 }
 
 * { box-sizing: border-box; }
@@ -21,43 +28,56 @@ html, body {
   margin: 0;
   min-height: 100%;
   background: var(--bg);
-  color: var(--fg);
+  color: var(--ink);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.6;
 }
 
-/* Navbar ------------------------------------------------------------------ */
+/* Navbar — black, cream text; active item takes its planet's primary color. */
 .navbar {
+  position: relative;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  padding: 18px 28px;
-  border-bottom: 1px solid rgba(245, 233, 208, 0.15);
+  padding: 14px 28px;
+  background: #000;
+  border-bottom: 3px solid var(--rule);
 }
 
 .navbar .brand {
   font-family: 'Jersey 10', monospace;
   font-size: 40px;
   letter-spacing: 2px;
-  color: var(--fg);
+  color: var(--ink);
   text-decoration: none;
 }
 
-.navbar .links {
-  display: flex;
-  gap: 26px;
-}
+.navbar .links { display: flex; gap: 30px; }
 
 .navbar .links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Jersey 10', monospace;
   font-size: 24px;
   letter-spacing: 1px;
-  color: var(--muted);
+  color: var(--ink);
   text-decoration: none;
 }
 
-.navbar .links a:hover { color: var(--fg); }
-.navbar .links a.active { color: var(--accent); }
+.navbar .links a:hover { color: #fff; }
+/* Active item colored via an inline --nav-active set per link (its planet hue). */
+.navbar .links a.active { color: var(--nav-active, var(--accent)); }
+
+/* Static planet icon (PNG) beside each nav item — scrolls with the DOM. */
+.navorb {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  vertical-align: middle;
+  flex: none;
+  object-fit: contain;
+}
 
 /* Page content ----------------------------------------------------------- */
 main {
@@ -66,11 +86,31 @@ main {
   padding: 48px 28px 96px;
 }
 
-h1 {
+/* Title row: a mini planet + the title, colored the page's primary accent. */
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 28px;
+  padding-bottom: 14px;
+  border-bottom: 4px solid var(--accent-2); /* underline under [planet + title] */
+}
+
+.page-title .navorb {   /* larger planet beside the big title */
+  width: 64px;
+  height: 64px;
+}
+
+.page-title h1 {
   font-family: 'Jersey 10', monospace;
   font-size: 64px;
   letter-spacing: 2px;
-  margin: 0 0 24px;
+  margin: 0;
+  color: var(--accent);
 }
 
 a { color: var(--accent); }
+
+/* Site-wide: links are never underlined, hover included — color alone carries
+   the affordance. */
+a, a:hover { text-decoration: none; }

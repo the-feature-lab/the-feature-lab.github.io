@@ -43,7 +43,7 @@ export const FLAB_OFFSET_Y = 14 * (5 / 22);
 export const VIEW_HEIGHT = 14;     // world height shown on screen (ortho)
 // Default view tilted just up-and-left of head-on, so we look a touch down from
 // the top-left — the F's top-left cube reads as nearest the camera.
-export const CAMERA_POS = [-4, 3, 21];
+export const CAMERA_POS = [-2, 1.5, 21];
 
 // --- Post-processing ------------------------------------------------------
 export const PIXELATE_ON = true;   // pixelation enabled by default
@@ -95,5 +95,5 @@ export const FROG_LEAP_WEIGHT = 2.0;   // pick-weight of a leap when one is avai
 // --- Persistence keys -----------------------------------------------------
 // Bump VIEW_KEY when the default framing changes so stale saved views are
 // discarded rather than overriding the new default.
-export const VIEW_KEY = 'flab.view.v4';
+export const VIEW_KEY = 'flab.view.v5';
 export const SETTINGS_KEY = 'flab.render.settings';

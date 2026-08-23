@@ -1,0 +1,9 @@
+/* About page. Intro prose only for now. Kept separate from site.css so the
+   shared chrome stays untouched. */
+
+.page-blurb {
+  font-family: 'Jersey 10', monospace;
+  font-size: 24px;
+  color: var(--muted);
+  margin: 0 0 34px;
+}
