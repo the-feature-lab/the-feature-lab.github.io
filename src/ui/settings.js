@@ -149,6 +149,7 @@ export function initSettings(ctx) {
     apply();
     save();
     ctx.restoreView();
+    ctx.onRestoreDefaults?.(); // extra reset hooks (e.g. cull frogs back to one)
     for (const ctrl of controllers) ctrl.updateDisplay();
   }
 

@@ -31,3 +31,50 @@
 .roster-names a:hover {
   color: var(--accent);
 }
+
+/* Planet ring ------------------------------------------------------------
+   The page title's planet is a static PNG; we ring the lab members around it,
+   each rotated so their feet point at the planet's center. The sprites are
+   deliberately large relative to the planet (bigger than on the homepage) so
+   they stay legible at this size. */
+
+/* Give the title row room for the ring, which overflows the planet's box on
+   every side. The extra left padding keeps the outermost sprite from being
+   clipped by the page edge; the bottom margin keeps it off the accent rule. */
+/* Room for the ring, which overflows the planet's box. Sized for the tuned
+   RING values in people.js; a much larger ring would need more. The
+   planet/title gap itself is set inline from RING.gap. */
+.page-title {
+  position: relative;
+  margin-bottom: 40px;
+}
+
+/* Sits exactly on top of the title's planet; JS copies the orb's box so the
+   ring can't drift if the planet's size or the title layout changes. */
+.planet-ring {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;           /* sprites read in front of the planet */
+}
+
+/* Each person is centered on the planet, then pushed out to the surface and
+   tipped so their feet face inward. The sprite's own bottom edge is the pivot
+   (transform-origin: 50% 100%), so rotating swings the body around the feet
+   rather than around the planet's center. */
+/* Size, margin and transform are set inline by people.js from RING, so the
+   ?tune sliders can drive them live. */
+.planet-ring .ringer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 100%;
+}
+
+.planet-ring .ringer img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  image-rendering: pixelated;   /* keep the blocky look crisp when scaled */
+}

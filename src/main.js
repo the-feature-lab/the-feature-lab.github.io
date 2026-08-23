@@ -11,6 +11,7 @@ import { spawnFrogs } from './flab/frog.js';
 import { TextRows } from './flab/text3d.js';
 import { FONTS } from './flab/fontcache.js';
 import { spawnPlanets } from './flab/planets.js';
+import { PEOPLE } from './data/people.js';
 import { HUD } from './ui/hud.js';
 import { ViewControls } from './ui/controls.js';
 import { initSettings } from './ui/settings.js';
@@ -54,7 +55,7 @@ function syncStarGrid() {
 await PhysicsWorld.init();
 const physics = new PhysicsWorld(scene);
 const grid = new FlabGrid(physics, DEFAULT_CUBE_COLOR);
-const frogs = spawnFrogs(scene, grid, FROG_COUNT);
+const frogs = spawnFrogs(scene, grid, camera, FROG_COUNT);
 
 // Floating 3D text below FLAB (the homepage's name + tagline). The pixelation
 // pass renders these blocky to match the cubes; the font is switchable (GUI).
@@ -71,12 +72,14 @@ const sign = new TextRows(scene, {
 const planets = spawnPlanets(scene, camera, renderer, {
   planets: [
     { file: '/planets/planet_sorbetlike.glb', label: 'RESEARCH', diameter: 1.7, pos: [-4.4, -4.1], href: '/research/' },
-    { file: '/planets/planet_earthlike.glb',  label: 'PEOPLE',   diameter: 1.7, pos: [0, -4.7], href: '/people/' },
+    { file: '/planets/planet_earthlike.glb',  label: 'PEOPLE',   diameter: 1.7, pos: [0, -4.7], href: '/people/',
+      // One little character per lab member, recolored from their sprite block.
+      walker: { sprites: PEOPLE.map((p) => p.sprite) } },
     { file: '/planets/planet_spiky.glb',      label: 'ABOUT',    diameter: 1.4, pos: [4.4, -4.1], href: '/about/' },
   ],
 });
 
-const hud = new HUD(document.getElementById('hud'), physics);
+const hud = new HUD(document.getElementById('hud'));
 
 // GUI + persisted settings. Settings drives the live subsystems via these hooks.
 initSettings({
@@ -88,6 +91,7 @@ initSettings({
   onFont: (name) => sign.setFont(FONTS[name]),
   onTextColor: (hex) => sign.setTextColor(hex),
   restoreView: () => controls.restoreDefault(),
+  onRestoreDefaults: () => frogs.reset(), // cull frogs back to one
   onCubeColor: (hex) => {
     for (const body of physics.bodies) {
       body.color = hex;
@@ -102,23 +106,48 @@ stage.onResize((w, h) => {
   syncStarGrid();
 });
 
-// Feed pointer position (normalized device coords) to the planets for hover.
+// Feed pointer position (normalized device coords) to planets + frogs for hover.
 window.addEventListener('pointermove', (e) => {
-  planets.setPointer(
-    (e.clientX / window.innerWidth) * 2 - 1,
-    -(e.clientY / window.innerHeight) * 2 + 1
-  );
+  const nx = (e.clientX / window.innerWidth) * 2 - 1;
+  const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+  planets.setPointer(nx, ny);
+  frogs.setPointer(nx, ny);
 });
 
-// Click a planet -> navigate to its page (straight link for now; a fancier
-// zoom/fade transition can come later).
-renderer.domElement.addEventListener('click', (e) => {
-  planets.setPointer(
-    (e.clientX / window.innerWidth) * 2 - 1,
-    -(e.clientY / window.innerHeight) * 2 + 1
-  );
-  const hit = planets.pick();
-  if (hit && hit.href) window.location.href = hit.href;
+// Click a planet -> navigate to its page. A real click must PRESS and RELEASE
+// on the same planet without dragging (so orbiting the camera and releasing over
+// a planet doesn't misfire — `click` alone fires on release regardless of where
+// the press began).
+const CLICK_SLOP = 6; // px of movement still counts as a click, not a drag
+let downPlanet = null, downFrog = null, downX = 0, downY = 0;
+
+function setPointerFromEvent(e) {
+  const nx = (e.clientX / window.innerWidth) * 2 - 1;
+  const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+  planets.setPointer(nx, ny);
+  frogs.setPointer(nx, ny);
+}
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  setPointerFromEvent(e);
+  downPlanet = planets.pick();
+  downFrog = downPlanet ? null : frogs.pick(); // planets take precedence
+  downX = e.clientX; downY = e.clientY;
+});
+
+renderer.domElement.addEventListener('pointerup', (e) => {
+  const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
+  setPointerFromEvent(e);
+  if (moved <= CLICK_SLOP) {
+    const planet = planets.pick();
+    if (planet && planet.href && planet === downPlanet) {
+      window.location.href = planet.href;
+    } else if (downFrog) {
+      const frog = frogs.pick();
+      if (frog && frog === downFrog) frogs.split(frog); // click a frog -> it splits
+    }
+  }
+  downPlanet = downFrog = null;
 });
 
 // ---------------------------------------------------------------------------

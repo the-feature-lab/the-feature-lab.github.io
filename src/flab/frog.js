@@ -4,7 +4,7 @@ import {
   CUBE_SIZE, FLAB_SCALE, FROG_FOOTPRINT,
   FROG_IDLE_MEAN, FROG_IDLE_MIN, FROG_LEAP_COOLDOWN,
   FROG_HOP_DUR, FROG_HOP_HEIGHT, FROG_JUMP_HEIGHT, FROG_JUMP_PROB,
-  FROG_LEAP_DUR, FROG_LEAP_WEIGHT,
+  FROG_LEAP_DUR, FROG_LEAP_WEIGHT, FROG_HOVER_SCALE, FROG_HOVER_SPEED,
 } from '../config.js';
 import {
   footPoint, basisQuaternion, planForward, planLeap, turnHeading, headingsFor,
@@ -49,7 +49,9 @@ export class Frog {
     this.cell = { ...start.cell };
     this.face = start.face.clone();       // "up" (outward normal)
     this.heading = start.heading.clone(); // walk direction along the face
-    this.colony.add(slotKey(this.cell, this.face)); // reserve the start slot
+    // Reserve the start slot — unless `transient` (a split frog momentarily
+    // co-located with its parent, about to hop off to reserve its real slot).
+    if (!start.transient) this.colony.add(slotKey(this.cell, this.face));
 
     // Hop animation state.
     this._delay = nextDelay(); // Poisson wait until the next action
@@ -59,6 +61,10 @@ export class Frog {
 
     this._history = [];        // recent moves for anti-repetition rules
     this._sinceLeap = FROG_LEAP_COOLDOWN; // start ready to leap
+
+    this.meshes = [];          // pickable meshes (for hover/click raycasts)
+    this.hovered = false;
+    this._hover = 1;           // current hover-scale multiplier (lerps to target)
   }
 
   // Build this frog from a pre-scaled template { model, baseScale } (loaded once
@@ -69,6 +75,8 @@ export class Frog {
 
     this.group = new THREE.Group();
     this.group.add(this.model);
+    this.meshes = [];
+    this.model.traverse((o) => { if (o.isMesh) this.meshes.push(o); });
     this._applyPose(footPoint(this.grid, this.cell, this.face),
                     basisQuaternion(this.face, this.heading));
     this.scene.add(this.group);
@@ -77,6 +85,34 @@ export class Frog {
   _applyPose(pos, quat) {
     this.group.position.copy(pos);
     this.group.quaternion.copy(quat);
+  }
+
+  // Landing states reachable by a single forward hop from THIS face — one per
+  // in-face heading (flat / corner-up / corner-down all fall out of the marching
+  // rule). Used to place a split-off frog only where the parent could hop.
+  reachableSlots() {
+    const out = [];
+    for (const heading of headingsFor(this.face)) {
+      const m = planForward(this.grid, this.cell, this.face, heading);
+      out.push({ cell: m.cell, face: m.face, heading: m.heading });
+    }
+    return out;
+  }
+
+  // Force a scripted hop from the current slot to a given landing state (used by
+  // a newly split frog to jump out of its parent). Reuses the normal hop path.
+  hopTo(next) {
+    this._timer = 0;
+    this._t = 0;
+    const fromPos = footPoint(this.grid, this.cell, this.face);
+    const fromQuat = basisQuaternion(this.face, this.heading);
+    this._hop = {
+      type: 'forward', kind: 'flat', next,
+      fromPos, toPos: footPoint(this.grid, next.cell, next.face),
+      fromQuat, toQuat: basisQuaternion(next.face, next.heading),
+    };
+    this.colony.add(slotKey(next.cell, next.face)); // reserve destination
+    this._hop.bow = this._bowVector(this._hop);
   }
 
   // Enumerate the legal hops from the current state and pick one at random.
@@ -163,8 +199,13 @@ export class Frog {
   update(dt) {
     if (!this.group) return;
 
+    // Smoothly approach the hover scale (framerate-independent lerp).
+    const hoverTarget = this.hovered ? FROG_HOVER_SCALE : 1;
+    this._hover += (hoverTarget - this._hover) * (1 - Math.exp(-FROG_HOVER_SPEED * dt));
+
     if (this._t < 0) {
-      // Idle: wait a Poisson delay, then choose and begin a hop.
+      // Idle: apply hover scale (no squash), then wait a Poisson delay and hop.
+      this.model.scale.setScalar(this.baseScale * this._hover);
       this._timer += dt;
       if (this._timer < this._delay) return;
       this._timer = 0;
@@ -220,11 +261,13 @@ export class Frog {
       this.group.quaternion.copy(hop.fromQuat).slerp(hop.toQuat, e);
     }
 
-    // Squash & stretch along the frog's local up (belly stays on-ish surface).
+    // Squash & stretch along the frog's local up (belly stays on-ish surface),
+    // multiplied by the current hover scale.
     const stretch = arc;
     const sy = 1 + 0.28 * stretch - 0.18 * (1 - stretch);
     const sxz = 1 / Math.sqrt(sy);
-    this.model.scale.set(this.baseScale * sxz, this.baseScale * sy, this.baseScale * sxz);
+    const bs = this.baseScale * this._hover;
+    this.model.scale.set(bs * sxz, bs * sy, bs * sxz);
 
     if (this._t >= 1) {
       // Land: commit the new surface state and snap to it exactly.
@@ -232,7 +275,7 @@ export class Frog {
       this.face = hop.next.face.clone();
       this.heading = hop.next.heading.clone();
       this._applyPose(hop.toPos, hop.toQuat);
-      this.model.scale.setScalar(this.baseScale);
+      this.model.scale.setScalar(this.baseScale * this._hover);
       this._t = -1;
       this._hop = null;
     }
@@ -260,57 +303,69 @@ export class Frog {
   }
 }
 
-// ---------------------------------------------------------------------------
-// spawnFrogs: load the GLB once, build a scaled template, then create `count`
-// frogs on distinct starting cubes that share a collision-avoidance colony.
-// Returns { update(dt) } to drive all frogs from the render loop.
-// ---------------------------------------------------------------------------
-export function spawnFrogs(scene, grid, count) {
-  const colony = new Set();
-  const frogs = [];
+// Candidate faces for an exposed surface slot, preference-ordered.
+const FROG_FACES = [
+  new THREE.Vector3(0, 1, 0),   // top
+  new THREE.Vector3(1, 0, 0),   // right
+  new THREE.Vector3(-1, 0, 0),  // left
+  new THREE.Vector3(0, -1, 0),  // bottom
+  new THREE.Vector3(0, 0, 1),   // front (always exposed — one cube deep)
+];
 
-  // Enumerate EXPOSED start slots — a cube face whose neighbor cell is empty, so
-  // the frog isn't wedged against another cube. Prefer top (+Y) then the side
-  // faces (±X, −Y) then the front (+Z); a buried face (neighbor occupied) is
-  // never offered.
-  const FACES = [
-    new THREE.Vector3(0, 1, 0),   // top
-    new THREE.Vector3(1, 0, 0),   // right
-    new THREE.Vector3(-1, 0, 0),  // left
-    new THREE.Vector3(0, -1, 0),  // bottom
-    new THREE.Vector3(0, 0, 1),   // front (always exposed — one cube deep)
-  ];
+// All EXPOSED slots on the grid ({cell, face, heading}); a slot is exposed when
+// the neighbor cell in the face direction is empty (frog isn't wedged in).
+function exposedSlots(grid) {
   const cells = [...grid.occupied].map((k) => {
     const [col, gridRow] = k.split(',').map(Number);
     return { x: col, y: gridRow, z: 0 };
   });
-  // Deterministic spread: sort cubes by (gridRow desc, col asc).
-  cells.sort((a, b) => b.y - a.y || a.x - b.x);
-
+  cells.sort((a, b) => b.y - a.y || a.x - b.x); // deterministic order
   const slots = [];
   for (const cell of cells) {
-    for (const face of FACES) {
-      // Exposed iff the cell in the face direction is empty.
+    for (const face of FROG_FACES) {
       if (grid.hasCell(cell.x + face.x, cell.y + face.y, cell.z + face.z)) continue;
-      const heading = headingsFor(face)[0]; // any valid in-face heading
-      slots.push({ cell, face, heading });
+      slots.push({ cell, face, heading: headingsFor(face)[0] });
     }
   }
+  return slots;
+}
 
-  // Spread the frogs across distinct exposed slots via a stride.
+// ---------------------------------------------------------------------------
+// spawnFrogs: load the GLB once (shared template) and manage a colony of frogs.
+// Starts with `count`; a frog can split in two on click (a new frog leaps to a
+// free neighboring slot). Frogs are hoverable (raycast) and grow while hovered.
+// Returns { update, setEnabled, setPointer, pick, split, reset }.
+// ---------------------------------------------------------------------------
+export function spawnFrogs(scene, grid, camera, count) {
+  const colony = new Set();           // occupied slot keys (collision avoidance)
+  let frogs = [];
+  let template = null;                // { model, baseScale } once the GLB loads
+  let enabled = true;
+
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2(-2, -2);
+
+  function addFrog(slot) {
+    const f = new Frog(scene, grid, colony, slot);
+    if (template) { f.build(template); f.group.visible = enabled; }
+    frogs.push(f);
+    return f;
+  }
+
+  // Initial frogs, spread across distinct exposed slots.
+  const slots = exposedSlots(grid);
   const n = Math.min(count, slots.length);
   const stride = Math.max(1, Math.floor(slots.length / n));
   const used = new Set();
   for (let i = 0, picked = 0; picked < n && i < slots.length * 2; i++) {
     const slot = slots[(i * stride) % slots.length];
     const key = slotKey(slot.cell, slot.face);
-    if (used.has(key)) continue;   // don't start two frogs on the same slot
+    if (used.has(key)) continue;
     used.add(key);
-    frogs.push(new Frog(scene, grid, colony, slot));
-    picked++;
+    addFrog(slot);
   }
 
-  // Load the model once; scale it to a template; clone into each frog.
+  // Load the model once; scale to a template; build every frog.
   new GLTFLoader().load('/frog.glb', (gltf) => {
     const model = gltf.scene;
     const box = new THREE.Box3().setFromObject(model);
@@ -320,23 +375,62 @@ export function spawnFrogs(scene, grid, count) {
     const footprint = Math.max(size.x, size.z) || 1;
     const baseScale = (cubeEdge * FROG_FOOTPRINT) / footprint;
     model.scale.setScalar(baseScale);
-    model.position.set(
-      -center.x * baseScale,
-      -box.min.y * baseScale,   // feet at group origin
-      -center.z * baseScale
-    );
-    const template = { model, baseScale };
-    for (const f of frogs) f.build(template);
-    for (const f of frogs) f.group.visible = enabled; // honor toggle set pre-load
+    model.position.set(-center.x * baseScale, -box.min.y * baseScale, -center.z * baseScale);
+    template = { model, baseScale };
+    for (const f of frogs) { f.build(template); f.group.visible = enabled; }
   }, undefined, (err) => console.error('[frog] failed to load /frog.glb', err));
 
-  let enabled = true;
+  function removeFrog(f) {
+    colony.delete(slotKey(f.cell, f.face));
+    if (f.group) scene.remove(f.group);
+    frogs = frogs.filter((x) => x !== f);
+  }
+
   return {
-    update(dt) { if (enabled) for (const f of frogs) f.update(dt); },
-    // Show/hide all frogs and pause their behavior when off.
+    update(dt) {
+      if (!enabled) return;
+      // Hover: the frog under the pointer grows.
+      raycaster.setFromCamera(pointer, camera);
+      let hit = null;
+      for (const f of frogs) {
+        if (f.meshes.length && raycaster.intersectObjects(f.meshes, false).length) { hit = f; break; }
+      }
+      for (const f of frogs) f.hovered = (f === hit);
+      for (const f of frogs) f.update(dt);
+    },
     setEnabled(on) {
       enabled = on;
       for (const f of frogs) if (f.group) f.group.visible = on;
+    },
+    setPointer(x, y) { pointer.set(x, y); },
+    // The frog under the pointer (for click handling), or null.
+    pick() {
+      raycaster.setFromCamera(pointer, camera);
+      for (const f of frogs) {
+        if (f.meshes.length && raycaster.intersectObjects(f.meshes, false).length) return f;
+      }
+      return null;
+    },
+    // Split a frog: a new frog jumps OUT of it to a free slot the parent could
+    // hop to (a reachable face, via the same marching rules), if any.
+    split(frog) {
+      if (!template) return false;
+      const dest = frog.reachableSlots().filter(
+        (s) => !colony.has(slotKey(s.cell, s.face))
+      );
+      if (!dest.length) return false;
+      const to = dest[Math.floor(Math.random() * dest.length)];
+      // Spawn co-located with the parent (transient: don't reserve the shared
+      // slot), then hop it out to the destination (which reserves the dest slot).
+      const child = addFrog({
+        cell: frog.cell, face: frog.face, heading: frog.heading, transient: true,
+      });
+      child.hopTo(to);
+      return true;
+    },
+    // Cull back to a single frog (for "restore defaults").
+    reset() {
+      while (frogs.length > 1) removeFrog(frogs[frogs.length - 1]);
     },
   };
 }

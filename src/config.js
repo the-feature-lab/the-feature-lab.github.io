@@ -75,9 +75,33 @@ export const PLANET_LABEL_GAP = 0.7;   // gap from planet top to its label
 export const PLANET_LABEL_COLOR = 0xf5e9d0; // cream, matching the sign
 export const PLANET_HOVER_SCALE = 1.125; // enlargement factor on hover (subtle)
 export const PLANET_HOVER_SPEED = 8.0;   // scale-lerp rate (higher = snappier)
+// Slow, gentle idle spin. Each planet gets a seeded rate in [MIN, MAX] rad/s and
+// a random direction — so they drift at different speeds/ways. Creatures on a
+// planet are parented to its spin group, so they turn with it.
+export const PLANET_SPIN_MIN = 0.04;   // rad/s (~26 s per revolution)
+export const PLANET_SPIN_MAX = 0.10;   // rad/s (~63 s ... ~10 s per revolution)
 
 // --- Frog -----------------------------------------------------------------
-export const FROG_COUNT = 20;        // how many frogs roam the letters
+// Little walkers that stroll around a planet's surface (see flab/walker.js).
+export const WALKER_HEIGHT = 0.21;   // walker height as a fraction of planet diameter
+export const WALKER_SPEED = 0.45;    // radians/sec when walking
+export const WALKER_TURN = 1.5;      // heading drift while walking (rad/sec)
+// NPC behavior: walkers alternate between standing still and short strolls,
+// with Poisson-ish timing so a crowd never falls into lockstep. They're idle
+// most of the time — IDLE_MEAN is comfortably longer than WALK_MEAN.
+export const WALKER_IDLE_MEAN = 5.5;  // typical seconds spent standing
+export const WALKER_IDLE_MIN = 1.5;   // never idle for less than this
+export const WALKER_WALK_MEAN = 3.0;  // typical seconds spent walking
+export const WALKER_WALK_MIN = 1.2;   // never walk for less than this
+export const WALKER_TURN_PROB = 0.35; // chance an idle ends with a turn-in-place
+export const WALKER_TURN_MAX = 2.2;   // biggest turn-in-place (radians)
+export const WALKER_TURN_DUR = 0.6;   // seconds a turn-in-place takes
+export const WALKER_WAVE_PROB = 0.12; // chance an idle plays the Wave clip
+export const WALKER_FADE = 0.25;      // animation crossfade duration (seconds)
+
+export const FROG_COUNT = 1;         // frogs at start (click one to split it in two)
+export const FROG_HOVER_SCALE = 1.35;  // enlargement factor when hovering a frog
+export const FROG_HOVER_SPEED = 10.0;  // hover scale-lerp rate (higher = snappier)
 export const FROG_FOOTPRINT = 0.85;  // fraction of a cube's top face the frog occupies
 // Inter-move timing is Poisson: exponential delays with mean FROG_IDLE_MEAN,
 // clamped to at least FROG_IDLE_MIN.

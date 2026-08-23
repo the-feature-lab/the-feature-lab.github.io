@@ -12,17 +12,34 @@
 //
 // `aliases` (optional) lists other spellings that appear in author lists
 // elsewhere ("James B. Simon"), so imported metadata can be matched to a person.
+//
+// `sprite` is the person's little cube character on the homepage PEOPLE planet:
+// a base `model` ('guy' | 'girl') plus one color per recolorable slot. Slot
+// names and what they paint are defined in flab/skin.js. Edit these by hand, or
+// use the builder at /spritelab/ and paste the result back here.
 // ---------------------------------------------------------------------------
 
 export const PEOPLE = [
   { id: 'jsimon',    name: 'Jamie Simon',    role: 'pi',        website: 'https://jamiesimon.io',
-    aliases: ['James B. Simon', 'James Simon'] },
-  { id: 'rfan',      name: 'Raymond Fan',    role: 'postdoc',   website: 'https://rfangit.github.io/' },
-  { id: 'dkarkada',  name: 'Dhruva Karkada', role: 'phd',       website: 'https://dkarkada.xyz' },
+    aliases: ['James B. Simon', 'James Simon'],
+    sprite: { model: 'guy', head: '#d9b380', skin: '#f2d0b3', shirt: '#4fbbc9', pants: '#1f2229', eyes: '#225c9b' }
+  },
+  { id: 'rfan',      name: 'Raymond Fan',    role: 'postdoc',   website: 'https://rfangit.github.io/',
+    sprite: { model: 'guy', head: '#0d0b0a', skin: '#f2d0b3', shirt: '#a8a69f', pants: '#1f2229', eyes: '#343434' }
+  },
+  { id: 'dkarkada',  name: 'Dhruva Karkada', role: 'phd',       website: 'https://dkarkada.xyz',
+    sprite: { model: 'guy', head: '#0d0b0a', skin: '#a3714a', shirt: '#ead7ae', pants: '#503535', eyes: '#1f1b18' }
+  },
   { id: 'jturnbull', name: 'Joey Turnbull',  role: 'phd',       website: 'https://joeyturn.github.io/',
-    aliases: ['Joseph Turnbull'] },
-  { id: 'sjain',     name: 'Samyak Jain',    role: 'phd',       website: 'https://samyakjain0112.github.io/' },
-  { id: 'mrhee',     name: 'Mark Rhee',      role: 'undergrad', website: 'https://mrkdh16.github.io/' },
+    aliases: ['Joseph Turnbull'],
+    sprite: { model: 'guy', head: '#2b2119', skin: '#f2d0b3', shirt: '#6f2311', pants: '#3a3f4a', eyes: '#343434' }
+  },
+  { id: 'sjain',     name: 'Samyak Jain',    role: 'phd',       website: 'https://samyakjain0112.github.io/',
+    sprite: { model: 'guy', head: '#0d0b0a', skin: '#57331f', shirt: '#072e69', pants: '#2f4f45', eyes: '#1f1b18' }
+  },
+  { id: 'mrhee',     name: 'Mark Rhee',      role: 'undergrad', website: 'https://mrkdh16.github.io/',
+    sprite: { model: 'guy', head: '#0d0b0a', skin: '#f2d0b3', shirt: '#c0a5be', pants: '#2b3a4a', eyes: '#343434' }
+  },
 ];
 
 // Look up a person by id. Returns undefined for unknown ids so callers can

@@ -18,6 +18,10 @@ export class ViewControls {
     this.controls.zoomSpeed = 0.9;
     this.controls.minDistance = 3;
     this.controls.maxDistance = 40;
+    // Scroll-zoom homes in on the point under the cursor (the target shifts so
+    // that point stays fixed) — lets you zoom into any spot, not just the origin.
+    // Click+drag still orbits the target as before.
+    this.controls.zoomToCursor = true;
 
     // Snapshot the default framing before restoring any saved view.
     this._default = {
