@@ -7,3 +7,10 @@
   color: var(--muted);
   margin: 0 0 34px;
 }
+
+/* Body paragraphs: the display font is fine for a short blurb, but multiple
+   paragraphs of prose read better with normal spacing between them. */
+.page-blurb + .page-blurb { margin-top: 22px; }
+
+.page-blurb a { color: var(--accent); }
+.page-blurb a:hover { color: var(--ink); }

@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mountNavbar } from '../src/site/navbar.js';
 import './spritelab.css';
 import { SLOTS, DEFAULTS, MODELS, buildSkin } from '../src/flab/skin.js';
-import { PEOPLE } from '../src/data/people.js';
+import { editablePeople } from '../src/data/people.js';
 
 mountNavbar(null); // no nav item is "active" — this page is unlisted
 // mountNavbar only sets --accent for a known page, so pick one for this tool.
@@ -36,10 +36,13 @@ const root = document.getElementById('lab');
 root.className = 'lab';
 
 // ---- state ----------------------------------------------------------------
-let state = { who: PEOPLE[0].id, model: 'guy', colors: {} };
+// Everyone WITH sprite data, including alumni: their character is still
+// editable even though it isn't drawn on the planets.
+const EDITABLE = editablePeople();
+let state = { who: EDITABLE[0].id, model: 'guy', colors: {} };
 
 function loadPerson(id) {
-  const person = PEOPLE.find((p) => p.id === id);
+  const person = EDITABLE.find((p) => p.id === id);
   const sprite = person?.sprite || {};
   state.who = id;
   state.model = sprite.model || 'guy';
@@ -58,7 +61,7 @@ whoRow.className = 'lab-row';
 whoRow.innerHTML = '<label for="who">Lab member</label>';
 const whoSel = document.createElement('select');
 whoSel.id = 'who';
-for (const p of PEOPLE) {
+for (const p of EDITABLE) {
   const o = document.createElement('option');
   o.value = p.id; o.textContent = p.name;
   whoSel.appendChild(o);

@@ -7,7 +7,117 @@ import {
   PLANET_LABEL_SIZE, PLANET_LABEL_GAP, PLANET_LABEL_COLOR,
   PLANET_HOVER_SCALE, PLANET_HOVER_SPEED,
   PLANET_SPIN_MIN, PLANET_SPIN_MAX,
+  ROCKET_HEIGHT, ROCKET_HOVER_SCALE, ROCKET_HOVER_SPEED,
+  ROCKET_LAUNCH_DUR, ROCKET_LAUNCH_DIST,
 } from '../config.js';
+
+// A small CLICKABLE rocket planted on the planet's BACK face (−Z), nose out.
+// While idle it's parented to `parent` (the spinGroup) so it rotates with the
+// planet, and grows on hover. On click (`launch()`) it detaches into world space
+// and flies a big out-of-plane arc (a smooth Catmull-Rom through liftoff/apex/
+// approach waypoints) into `target` (the front face of FLAB's center cube) for a
+// perpendicular direct hit, then disappears.
+class Rocket {
+  constructor(parent, radius, { scene, target }) {
+    this.parent = parent;
+    this.scene = scene;
+    this.target = target;          // { center, front } world points
+    this.radius = radius;
+    this.meshes = [];
+    this.hovered = false;
+    this._hover = 1;
+    this._model = null;
+    this._baseScale = 1;
+    this.dead = false;             // true once it has hit + vanished
+
+    this._flight = null;           // { curve, t } while flying, else null
+    this._nose = new THREE.Vector3(0, 1, 0); // model's local nose axis (+Y)
+
+    const OUT = new THREE.Vector3(0, 0, -1);
+    this.holder = new THREE.Group();
+    this.holder.position.copy(OUT).multiplyScalar(radius * 0.96);
+    this.holder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), OUT);
+    parent.add(this.holder);
+
+    new GLTFLoader().load('/rocketship.glb', (gltf) => {
+      const m = gltf.scene;
+      const box = new THREE.Box3().setFromObject(m);
+      const size = new THREE.Vector3(); box.getSize(size);
+      const center = new THREE.Vector3(); box.getCenter(center);
+      const s = (radius * ROCKET_HEIGHT) / (size.y || 1);
+      m.scale.setScalar(s);
+      m.position.set(-center.x * s, -box.min.y * s, -center.z * s);
+      this.holder.add(m);
+      this._model = m;
+      this._baseScale = s;
+      m.traverse((o) => { if (o.isMesh) this.meshes.push(o); });
+    }, undefined, (err) => console.error('[planets] rocket failed', err));
+  }
+
+  // Detach into world space and build the flight curve from the current pose to
+  // the target, arriving perpendicular to the cube's front face (along −Z).
+  launch() {
+    if (this._flight || this.dead || !this._model) return;
+
+    // Reparent holder -> scene, preserving world transform.
+    const wp = new THREE.Vector3(), wq = new THREE.Quaternion(), ws = new THREE.Vector3();
+    this.holder.matrixWorld.decompose(wp, wq, ws);
+    this.scene.add(this.holder);
+    this.holder.position.copy(wp);
+    this.holder.quaternion.copy(wq);
+    this.holder.scale.copy(ws);
+
+    const P0 = wp.clone();
+    const P3 = this.target.front.clone();
+    const startDir = this._nose.clone().applyQuaternion(wq).normalize(); // nose (world)
+
+    // Waypoints for a smooth Catmull-Rom pass-through (no kinks):
+    //   liftoff  : a short rise straight up the nose off the pad (clears planet)
+    //   apex     : high, centered over the launch->target midline, pulled out of
+    //              plane toward the camera (+Z) for the big out-of-plane swoop
+    //   approach : in front of the target face (+Z) so it comes in perpendicular
+    const mid = P0.clone().lerp(P3, 0.5);
+    const liftoff = P0.clone().addScaledVector(startDir, this.radius * 2.2);
+    const apex = new THREE.Vector3(mid.x, Math.max(P0.y, P3.y) + 2.5, 7);
+    const approach = P3.clone().add(new THREE.Vector3(0, 0, 2.2)); // straight out front
+
+    const curve = new THREE.CatmullRomCurve3(
+      [P0, liftoff, apex, approach, P3], false, 'catmullrom', 0.5
+    );
+    this._flight = { curve, t: 0 };
+    this.hovered = false;
+  }
+
+  update(dt) {
+    if (!this._model || this.dead) return;
+
+    if (this._flight) {
+      const f = this._flight;
+      f.t = Math.min(f.t + dt / ROCKET_LAUNCH_DUR, 1);
+      const e = f.t * f.t * (3 - 2 * f.t); // ease along the arc
+      const pos = f.curve.getPoint(e);
+      this.holder.position.copy(pos);
+      // Point the nose along the direction of travel.
+      const tan = f.curve.getTangent(Math.min(e + 0.001, 1)).normalize();
+      this.holder.quaternion.setFromUnitVectors(this._nose, tan);
+      if (f.t >= 1) { this._impact(); }
+      return;
+    }
+
+    // Idle: hover grow (from the base, so it doesn't sink into the surface).
+    const target = this.hovered ? ROCKET_HOVER_SCALE : 1;
+    this._hover += (target - this._hover) * (1 - Math.exp(-ROCKET_HOVER_SPEED * dt));
+    this._model.scale.setScalar(this._baseScale * this._hover);
+  }
+
+  _impact() {
+    // For now: just disappear on contact (explosion/frog come later).
+    this._flight = null;
+    this.dead = true;
+    this.meshes = [];
+    if (this.holder.parent) this.holder.parent.remove(this.holder);
+  }
+}
 
 // A cartoonish wooden signpost planted on a planet's north pole (+Y): a thin
 // post with a small plank near the top bearing `label`. Parented to the spinning
@@ -187,6 +297,14 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
       }
     }
 
+    // Opt-in: a small CLICKABLE rocket on the planet's back, rotating with it.
+    // `spec.rocket` is { target } — the world { center, front } to slam into.
+    if (spec.rocket) {
+      item.rocket = new Rocket(spinGroup, item.radius, {
+        scene, target: spec.rocket.target,
+      });
+    }
+
     if (spec.signpost) {
       // EXPERIMENT: a Little-Prince-style wooden signpost planted on the planet.
       buildSignpost(spinGroup, item.radius, spec.label);
@@ -225,10 +343,25 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
     return null;
   }
 
+  // The rocket under the pointer, or null (only the People planet has one).
+  function pickRocket() {
+    raycaster.setFromCamera(pointer, camera);
+    for (const it of items) {
+      if (it.rocket?.meshes.length &&
+          raycaster.intersectObjects(it.rocket.meshes, false).length) {
+        return it.rocket;
+      }
+    }
+    return null;
+  }
+
   function updateHover() {
-    const hit = pick();
-    for (const it of items) it.hovered = (it === hit);
-    renderer.domElement.style.cursor = hit ? 'pointer' : ''; // cursor feedback
+    const planet = pick();
+    for (const it of items) it.hovered = (it === planet);
+    // Rocket hover only when its planet body isn't the thing under the pointer.
+    const rocket = planet ? null : pickRocket();
+    for (const it of items) if (it.rocket) it.rocket.hovered = (it.rocket === rocket);
+    renderer.domElement.style.cursor = (planet || rocket) ? 'pointer' : '';
   }
 
   const q = new THREE.Quaternion();
@@ -245,9 +378,11 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
         it.scale += (target - it.scale) * k;
         it.spinGroup.scale.setScalar(it.scale);
         if (it.walkers) for (const w of it.walkers) w.update(dt);
+        if (it.rocket) it.rocket.update(dt);
       }
     },
     setPointer,
-    pick, // the planet under the pointer (for click handling), or null
+    pick,        // the planet under the pointer, or null
+    pickRocket,  // the rocket under the pointer, or null
   };
 }

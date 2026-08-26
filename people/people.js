@@ -1,6 +1,6 @@
 import { mountNavbar } from '../src/site/navbar.js';
 import './people.css';
-import { peopleByRole, PEOPLE } from '../src/data/people.js';
+import { peopleByRole, spritedPeople } from '../src/data/people.js';
 
 mountNavbar('people');
 
@@ -18,6 +18,8 @@ function mountRoster() {
   for (const group of peopleByRole()) {
     const section = document.createElement('section');
     section.className = 'roster-group';
+    // Some groups (alumni) are set off by a pale divider above them.
+    if (group.rule) section.classList.add('roster-divided');
 
     const h2 = document.createElement('h2');
     h2.textContent = `${group.label}:`;
@@ -67,7 +69,8 @@ function mountPlanetRing() {
   ring.className = 'planet-ring';
   title.appendChild(ring);
 
-  const slots = PEOPLE.map((person) => {
+  // Alumni have no sprite, so they don't appear in the ring.
+  const slots = spritedPeople().map((person) => {
     const slot = document.createElement('div');
     slot.className = 'ringer';
     const img = document.createElement('img');

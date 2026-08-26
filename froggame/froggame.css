@@ -1,0 +1,23 @@
+/* Frog game harness — dev page, not linked from anywhere. */
+
+#app { position: fixed; inset: 0; }
+
+.fg-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  font-family: 'Jersey 10', monospace;
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: #f5e9d0;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(245, 233, 208, 0.35);
+  border-radius: 4px;
+  padding: 9px 18px;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fg-hint b { color: #71b465; font-weight: normal; }

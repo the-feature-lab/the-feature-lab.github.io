@@ -78,3 +78,10 @@
   object-position: bottom;
   image-rendering: pixelated;   /* keep the blocky look crisp when scaled */
 }
+
+/* A pale divider above a set-apart group (alumni). */
+.roster-group.roster-divided {
+  border-top: 1px solid var(--rule);
+  margin-top: 30px;
+  padding-top: 22px;
+}

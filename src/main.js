@@ -11,7 +11,7 @@ import { spawnFrogs } from './flab/frog.js';
 import { TextRows } from './flab/text3d.js';
 import { FONTS } from './flab/fontcache.js';
 import { spawnPlanets } from './flab/planets.js';
-import { PEOPLE } from './data/people.js';
+import { spritedPeople } from './data/people.js';
 import { HUD } from './ui/hud.js';
 import { ViewControls } from './ui/controls.js';
 import { initSettings } from './ui/settings.js';
@@ -74,12 +74,13 @@ const planets = spawnPlanets(scene, camera, renderer, {
     { file: '/planets/planet_sorbetlike.glb', label: 'RESEARCH', diameter: 1.7, pos: [-4.4, -4.1], href: '/research/' },
     { file: '/planets/planet_earthlike.glb',  label: 'PEOPLE',   diameter: 1.7, pos: [0, -4.7], href: '/people/',
       // One little character per lab member, recolored from their sprite block.
-      walker: { sprites: PEOPLE.map((p) => p.sprite) } },
+      // (Rocket hidden for now — re-enable with `rocket: { target: grid.centerCube() }`.)
+      walker: { sprites: spritedPeople().map((p) => p.sprite) } },
     { file: '/planets/planet_spiky.glb',      label: 'ABOUT',    diameter: 1.4, pos: [4.4, -4.1], href: '/about/' },
   ],
 });
 
-const hud = new HUD(document.getElementById('hud'));
+const hud = new HUD(document.getElementById("hud"));
 
 // GUI + persisted settings. Settings drives the live subsystems via these hooks.
 initSettings({
@@ -100,10 +101,12 @@ initSettings({
   },
 });
 
-// Keep post-fx targets and the star grid in step with the window.
+// Keep post-fx targets and the star grid in step with the window, and refit the
+// camera to the screen (until the user takes over the view).
 stage.onResize((w, h) => {
   postfx.setSize(w, h);
   syncStarGrid();
+  controls.onResize();
 });
 
 // Feed pointer position (normalized device coords) to planets + frogs for hover.
@@ -119,7 +122,7 @@ window.addEventListener('pointermove', (e) => {
 // a planet doesn't misfire — `click` alone fires on release regardless of where
 // the press began).
 const CLICK_SLOP = 6; // px of movement still counts as a click, not a drag
-let downPlanet = null, downFrog = null, downX = 0, downY = 0;
+let downPlanet = null, downRocket = null, downFrog = null, downX = 0, downY = 0;
 
 function setPointerFromEvent(e) {
   const nx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -130,8 +133,10 @@ function setPointerFromEvent(e) {
 
 renderer.domElement.addEventListener('pointerdown', (e) => {
   setPointerFromEvent(e);
+  // Precedence: planet body > rocket > frog.
   downPlanet = planets.pick();
-  downFrog = downPlanet ? null : frogs.pick(); // planets take precedence
+  downRocket = downPlanet ? null : planets.pickRocket();
+  downFrog = (downPlanet || downRocket) ? null : frogs.pick();
   downX = e.clientX; downY = e.clientY;
 });
 
@@ -142,12 +147,14 @@ renderer.domElement.addEventListener('pointerup', (e) => {
     const planet = planets.pick();
     if (planet && planet.href && planet === downPlanet) {
       window.location.href = planet.href;
+    } else if (downRocket && planets.pickRocket() === downRocket) {
+      downRocket.launch(); // click the rocket -> it blasts off and returns
     } else if (downFrog) {
       const frog = frogs.pick();
       if (frog && frog === downFrog) frogs.split(frog); // click a frog -> it splits
     }
   }
-  downPlanet = downFrog = null;
+  downPlanet = downRocket = downFrog = null;
 });
 
 // ---------------------------------------------------------------------------

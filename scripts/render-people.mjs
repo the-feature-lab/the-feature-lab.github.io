@@ -43,7 +43,7 @@ const shots = await page.evaluate(async (SIZE) => {
   const THREE = await import('/node_modules/three/build/three.module.js');
   const { GLTFLoader } = await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
   const { buildSkin } = await import('/src/flab/skin.js');
-  const { PEOPLE } = await import('/src/data/people.js');
+  const { spritedPeople } = await import('/src/data/people.js');
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(SIZE, SIZE, false);
@@ -67,7 +67,8 @@ const shots = await page.evaluate(async (SIZE) => {
   const bare = (n) => n.split('|').pop().replace(/\.\d+$/, '');
   const out = {};
 
-  for (const person of PEOPLE) {
+  // Alumni have no sprite; only render the people who do.
+  for (const person of spritedPeople()) {
     const sprite = person.sprite;
     const model = sprite.model;
     if (!cache[model]) cache[model] = await loader.loadAsync(`/cube_${model}.glb`);

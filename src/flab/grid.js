@@ -92,4 +92,21 @@ export class FlabGrid {
     }
     return best;
   }
+
+  // The occupied cube whose center is nearest the grid centroid — the "center of
+  // the whole FLAB". Returns { center, front } world points (front = the +Z face
+  // center, where a perpendicular hit lands).
+  centerCube() {
+    const centroid = new THREE.Vector3();
+    for (const c of this.cubeCenters) centroid.add(c);
+    centroid.divideScalar(this.cubeCenters.length || 1);
+    let best = this.cubeCenters[0], bestD = Infinity;
+    for (const c of this.cubeCenters) {
+      const d = c.distanceToSquared(centroid);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    const center = best.clone();
+    const front = center.clone().add(new THREE.Vector3(0, 0, this.topHalf));
+    return { center, front };
+  }
 }

@@ -44,15 +44,22 @@ export const VIEW_HEIGHT = 14;     // world height shown on screen (ortho)
 // Default view tilted just up-and-left of head-on, so we look a touch down from
 // the top-left — the F's top-left cube reads as nearest the camera.
 export const CAMERA_POS = [-2, 1.5, 21];
+// Content bounding half-extents (world units) used to fit-to-screen so FLAB +
+// the planets are fully visible on any aspect (phones included), with margin.
+export const CONTENT_HALF_W = 6.2;   // half-width  (planets span ~±4.4 + radius/labels)
+export const CONTENT_HALF_H = 6.2;   // half-height (FLAB top ~+5, planet labels ~−5.7)
+export const VIEW_MARGIN = 1.12;     // extra breathing room around the content (×)
+// Saved view expires after this many ms of not visiting — then it refits fresh.
+export const VIEW_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 
 // --- Post-processing ------------------------------------------------------
-export const PIXELATE_ON = true;   // pixelation enabled by default
+export const PIXELATE_ON = false;  // pixelation off by default
 export const PIXEL_SIZE = 2;       // pixelation block edge in CSS pixels
 export const STAR_BASE_PX = 3;     // star point size (CSS px) when pixelation is off
-export const BLOOM_ON = false;     // glow disabled by default
-export const BLOOM_THRESHOLD = 0.25; // brightness above which a pixel glows
-export const BLOOM_GLOW = 1.0;       // halo strength bleeding into empty/black space
-export const BLOOM_RADIUS = 10;      // blur length-scale in output pixels
+export const BLOOM_ON = true;      // glow on by default
+export const BLOOM_THRESHOLD = 0.1;  // brightness above which a pixel glows
+export const BLOOM_GLOW = 0.15;      // halo strength bleeding into empty/black space
+export const BLOOM_RADIUS = 40;      // blur length-scale in output pixels
 
 // --- Sign (floating text + hovering outline) ------------------------------
 // A light, stripped-down sign: cream letters floating with a thin cream border
@@ -80,6 +87,13 @@ export const PLANET_HOVER_SPEED = 8.0;   // scale-lerp rate (higher = snappier)
 // planet are parented to its spin group, so they turn with it.
 export const PLANET_SPIN_MIN = 0.04;   // rad/s (~26 s per revolution)
 export const PLANET_SPIN_MAX = 0.10;   // rad/s (~63 s ... ~10 s per revolution)
+// Rocket on the People planet's back: clickable — grows on hover, launches on
+// click (flies out along its nose, then eases back to the pad).
+export const ROCKET_HEIGHT = 0.9;      // rocket height as a fraction of planet radius
+export const ROCKET_HOVER_SCALE = 1.25;  // grow factor on hover (from its base)
+export const ROCKET_HOVER_SPEED = 10.0;  // hover scale-lerp rate
+export const ROCKET_LAUNCH_DUR = 2.2;    // seconds for the launch-and-return arc
+export const ROCKET_LAUNCH_DIST = 3.0;   // how far it flies out (× planet radius)
 
 // --- Frog -----------------------------------------------------------------
 // Little walkers that stroll around a planet's surface (see flab/walker.js).
@@ -119,5 +133,5 @@ export const FROG_LEAP_WEIGHT = 2.0;   // pick-weight of a leap when one is avai
 // --- Persistence keys -----------------------------------------------------
 // Bump VIEW_KEY when the default framing changes so stale saved views are
 // discarded rather than overriding the new default.
-export const VIEW_KEY = 'flab.view.v5';
+export const VIEW_KEY = 'flab.view.v6';
 export const SETTINGS_KEY = 'flab.render.settings';

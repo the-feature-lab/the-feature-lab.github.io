@@ -9,6 +9,7 @@ import {
 import {
   footPoint, basisQuaternion, planForward, planLeap, turnHeading, headingsFor,
 } from './surface.js';
+import { playPop } from './sound.js';
 
 // Key for a surface slot (cell + face) — a frog's "space" that others avoid.
 function slotKey(cell, face) {
@@ -71,6 +72,7 @@ export class Frog {
   // and cloned per frog).
   build(template) {
     this.baseScale = template.baseScale;
+    this._offset = template.offset.clone(); // unscaled feet/center offset
     this.model = template.model.clone(true);
 
     this.group = new THREE.Group();
@@ -80,6 +82,14 @@ export class Frog {
     this._applyPose(footPoint(this.grid, this.cell, this.face),
                     basisQuaternion(this.face, this.heading));
     this.scene.add(this.group);
+  }
+
+  // Scale the model (per-axis) while KEEPING the feet planted on the surface:
+  // the position offset must scale with the same factors, else growing the frog
+  // pushes its soles below y=0. `sx/sy/sz` are absolute scale factors.
+  _scaleModel(sx, sy, sz) {
+    this.model.scale.set(sx, sy, sz);
+    this.model.position.set(this._offset.x * sx, this._offset.y * sy, this._offset.z * sz);
   }
 
   _applyPose(pos, quat) {
@@ -204,8 +214,12 @@ export class Frog {
     this._hover += (hoverTarget - this._hover) * (1 - Math.exp(-FROG_HOVER_SPEED * dt));
 
     if (this._t < 0) {
-      // Idle: apply hover scale (no squash), then wait a Poisson delay and hop.
-      this.model.scale.setScalar(this.baseScale * this._hover);
+      // Idle: hover grows the frog UPWARD from its planted feet (feet stay on the
+      // surface; only the top rises). Grow Y more than XZ for an "up" stretch.
+      const bs = this.baseScale;
+      const sy = bs * this._hover;
+      const sxz = bs * (1 + (this._hover - 1) * 0.4); // widen less than it grows tall
+      this._scaleModel(sxz, sy, sxz);
       this._timer += dt;
       if (this._timer < this._delay) return;
       this._timer = 0;
@@ -262,12 +276,12 @@ export class Frog {
     }
 
     // Squash & stretch along the frog's local up (belly stays on-ish surface),
-    // multiplied by the current hover scale.
+    // multiplied by the current hover scale. Feet stay planted (_scaleModel).
     const stretch = arc;
     const sy = 1 + 0.28 * stretch - 0.18 * (1 - stretch);
     const sxz = 1 / Math.sqrt(sy);
     const bs = this.baseScale * this._hover;
-    this.model.scale.set(bs * sxz, bs * sy, bs * sxz);
+    this._scaleModel(bs * sxz, bs * sy, bs * sxz);
 
     if (this._t >= 1) {
       // Land: commit the new surface state and snap to it exactly.
@@ -275,7 +289,7 @@ export class Frog {
       this.face = hop.next.face.clone();
       this.heading = hop.next.heading.clone();
       this._applyPose(hop.toPos, hop.toQuat);
-      this.model.scale.setScalar(this.baseScale * this._hover);
+      this._scaleModel(this.baseScale * this._hover, this.baseScale * this._hover, this.baseScale * this._hover);
       this._t = -1;
       this._hop = null;
     }
@@ -376,7 +390,8 @@ export function spawnFrogs(scene, grid, camera, count) {
     const baseScale = (cubeEdge * FROG_FOOTPRINT) / footprint;
     model.scale.setScalar(baseScale);
     model.position.set(-center.x * baseScale, -box.min.y * baseScale, -center.z * baseScale);
-    template = { model, baseScale };
+    // Unscaled local offsets so a frog can re-anchor its feet at any scale.
+    template = { model, baseScale, offset: new THREE.Vector3(-center.x, -box.min.y, -center.z) };
     for (const f of frogs) { f.build(template); f.group.visible = enabled; }
   }, undefined, (err) => console.error('[frog] failed to load /frog.glb', err));
 
@@ -426,6 +441,7 @@ export function spawnFrogs(scene, grid, camera, count) {
         cell: frog.cell, face: frog.face, heading: frog.heading, transient: true,
       });
       child.hopTo(to);
+      playPop(); // the new frog popping out of the old one
       return true;
     },
     // Cull back to a single frog (for "restore defaults").

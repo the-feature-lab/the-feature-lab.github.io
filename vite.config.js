@@ -7,7 +7,7 @@ const root = import.meta.dirname;
 // In dev, requesting the slash-less form (/people) falls through to the root
 // index.html instead of the page. This plugin redirects /people -> /people/ so
 // dev matches GitHub Pages, which auto-adds the trailing slash in production.
-const PAGE_DIRS = ['research', 'people', 'about', 'manybody', 'spritelab'];
+const PAGE_DIRS = ['research', 'people', 'about', 'manybody', 'spritelab', 'froggame'];
 function trailingSlashRedirect() {
   return {
     name: 'trailing-slash-redirect',
@@ -50,6 +50,8 @@ export default defineConfig({
         manybody: resolve(root, 'manybody/index.html'),
         // Unlinked builder tool for the cube sprites.
         spritelab: resolve(root, 'spritelab/index.html'),
+        // Dev harness for the frog game.
+        froggame: resolve(root, 'froggame/index.html'),
       },
     },
   },

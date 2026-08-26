@@ -164,5 +164,20 @@ export function initSettings(ctx) {
   };
   const controllers = CONTROLS.map((c) => c.gui(target(c.folder), settings, onEdit, ctx));
 
+  // Menu visibility: hidden by default (camera-ready), toggled with Esc, and its
+  // open/closed state is remembered across loads.
+  const MENU_KEY = 'flab.menuOpen';
+  let menuOpen = false;
+  try { menuOpen = localStorage.getItem(MENU_KEY) === '1'; } catch {}
+  const applyMenu = () => { gui.domElement.style.display = menuOpen ? '' : 'none'; };
+  applyMenu();
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      menuOpen = !menuOpen;
+      applyMenu();
+      try { localStorage.setItem(MENU_KEY, menuOpen ? '1' : '0'); } catch {}
+    }
+  });
+
   return { settings, gui };
 }

@@ -13,7 +13,10 @@
 // `aliases` (optional) lists other spellings that appear in author lists
 // elsewhere ("James B. Simon"), so imported metadata can be matched to a person.
 //
-// `sprite` is the person's little cube character on the homepage PEOPLE planet:
+// `sprite` is OPTIONAL, and having one is separate from being SHOWN: whether a
+// person's character appears on the planets is decided by their role's
+// `sprites` flag (see ROLES). Alumni keep their sprite; it just isn't drawn.
+// It is the person's little cube character on the homepage PEOPLE planet:
 // a base `model` ('guy' | 'girl') plus one color per recolorable slot. Slot
 // names and what they paint are defined in flab/skin.js. Edit these by hand, or
 // use the builder at /spritelab/ and paste the result back here.
@@ -40,12 +43,30 @@ export const PEOPLE = [
   { id: 'mrhee',     name: 'Mark Rhee',      role: 'undergrad', website: 'https://mrkdh16.github.io/',
     sprite: { model: 'guy', head: '#0d0b0a', skin: '#f2d0b3', shirt: '#c0a5be', pants: '#2b3a4a', eyes: '#343434' }
   },
+  // Alumni keep their sprite; the `alumni` role is what hides it.
+  { id: 'bottlik',   name: 'Berkan Ottlik',  role: 'alumni',    website: 'https://berkan.xyz/',
+    sprite: { model: 'guy', head: '#5c3b28', skin: '#e8b98f', shirt: '#5aa469', pants: '#3a3f4a', eyes: '#3d2b1f' }
+  },
 ];
 
 // Look up a person by id. Returns undefined for unknown ids so callers can
 // fall back to rendering a plain (non-lab) author name.
 export function personById(id) {
   return PEOPLE.find((p) => p.id === id);
+}
+
+// Everyone whose cube character should be DRAWN: they have a sprite, and their
+// role shows sprites (alumni don't). The homepage walkers, the People-page ring,
+// and the pre-render script all use this rather than PEOPLE, so a person with no
+// sprite — or one whose role hides it — can't break them.
+export function spritedPeople(people = PEOPLE) {
+  return people.filter((p) => p.sprite && ROLES[p.role]?.sprites !== false);
+}
+
+// Everyone with sprite data at all, shown or not — for the /spritelab/ editor,
+// which should still be able to edit an alum's character.
+export function editablePeople(people = PEOPLE) {
+  return people.filter((p) => p.sprite);
 }
 
 // Role definitions. `order` fixes the display sequence on the People page;
@@ -55,6 +76,10 @@ export const ROLES = {
   postdoc:   { order: 1, one: 'postdoc',       many: 'postdocs' },
   phd:       { order: 2, one: 'PhD student',   many: 'PhD students' },
   undergrad: { order: 3, one: 'undergrad',     many: 'undergrads' },
+  // `rule: true` draws a pale divider above this group; `sprites: false` keeps
+  // its members off the planets. Alumni keep their sprite data — graduating is
+  // just a `role` change, and nothing about their appearance is lost.
+  alumni:    { order: 4, one: 'alumni',        many: 'alumni', rule: true, sprites: false },
 };
 
 // Group PEOPLE into [{ key, label, members }], ordered by ROLES[].order.
@@ -68,6 +93,7 @@ export function peopleByRole(people = PEOPLE) {
     .map(({ key, role, members }) => ({
       key,
       label: members.length > 1 ? role.many : role.one,
+      rule: !!role.rule,
       members,
     }));
 }
