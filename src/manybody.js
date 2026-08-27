@@ -4,6 +4,9 @@ import { Timer } from 'three';
 import { SUBSTEPS } from './config.js';
 import { PhysicsWorld } from './engine/physics.js';
 import { computeEnergies } from './engine/energy.js';
+import { initAnalytics } from './site/analytics.js';
+
+initAnalytics(); // GA4 (live host only; no-op until an ID is configured)
 
 // ---------------------------------------------------------------------------
 // Manybody demo: three colored cubes attracting each other under the shared

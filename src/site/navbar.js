@@ -1,5 +1,6 @@
 import './site.css';
 import { PAGES, PAGE_ORDER } from './planets-config.js';
+import { initAnalytics } from './analytics.js';
 
 // ---------------------------------------------------------------------------
 // Shared page chrome for the content pages:
@@ -23,6 +24,7 @@ function orb(iconUrl, cls = 'navorb') {
 }
 
 export function mountNavbar(active) {
+  initAnalytics(); // GA4 (live host only; no-op until an ID is configured)
   const page = PAGES[active];
   if (page) document.documentElement.style.setProperty('--accent', page.color);
 

@@ -15,6 +15,9 @@ import { spritedPeople } from './data/people.js';
 import { HUD } from './ui/hud.js';
 import { ViewControls } from './ui/controls.js';
 import { initSettings } from './ui/settings.js';
+import { initAnalytics } from './site/analytics.js';
+
+initAnalytics(); // GA4 (live host only; no-op until an ID is configured)
 
 // ---------------------------------------------------------------------------
 // FLAB homepage: an N-body cube sandbox spelling "FLAB", with a pixelation +
