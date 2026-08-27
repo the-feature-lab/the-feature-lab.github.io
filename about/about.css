@@ -2,8 +2,8 @@
    shared chrome stays untouched. */
 
 .page-blurb {
-  font-family: 'Jersey 10', monospace;
-  font-size: 24px;
+  font-family: var(--font-body);
+  font-size: 17px;
   color: var(--muted);
   margin: 0 0 34px;
 }

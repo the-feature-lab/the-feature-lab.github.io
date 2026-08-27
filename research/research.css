@@ -8,7 +8,7 @@
 
 /* Section heading ("Papers", "Essays and blogposts"). */
 .artifact-group h2 {
-  font-family: 'Jersey 10', monospace;
+  font-family: var(--font-display);
   font-weight: normal;
   font-size: 34px;
   letter-spacing: 1px;
@@ -23,9 +23,9 @@
 }
 
 .artifact {
-  font-family: 'Jersey 10', monospace;
-  font-size: 26px;
-  line-height: 1.25;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
   margin: 0 0 18px;
 }
 
@@ -53,7 +53,7 @@
 
 /* Author line, a size down and dimmed so titles stay dominant. */
 .artifact-authors {
-  font-size: 20px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -63,11 +63,11 @@
   vertical-align: super;
 }
 
-/* Intro prose above the lists. Left in the page's display font to match, but
-   at reading size and dimmed so the section headings still lead. */
+/* Intro prose above the lists — readable body mono, dimmed so section
+   headings still lead. */
 .page-blurb {
-  font-family: 'Jersey 10', monospace;
-  font-size: 24px;
+  font-family: var(--font-body);
+  font-size: 17px;
   color: var(--muted);
   margin: 0 0 34px;
 }
