@@ -73,13 +73,13 @@ export function editablePeople(people = PEOPLE) {
 // `one`/`many` are the singular/plural section labels.
 export const ROLES = {
   pi:        { order: 0, one: 'PI',            many: 'PIs' },
-  postdoc:   { order: 1, one: 'postdoc',       many: 'postdocs' },
+  postdoc:   { order: 1, one: 'Postdoc',       many: 'Postdocs' },
   phd:       { order: 2, one: 'PhD student',   many: 'PhD students' },
-  undergrad: { order: 3, one: 'undergrad',     many: 'undergrads' },
+  undergrad: { order: 3, one: 'Undergrad',     many: 'Undergrads' },
   // `rule: true` draws a pale divider above this group; `sprites: false` keeps
   // its members off the planets. Alumni keep their sprite data — graduating is
   // just a `role` change, and nothing about their appearance is lost.
-  alumni:    { order: 4, one: 'alumni',        many: 'alumni', rule: true, sprites: false },
+  alumni:    { order: 4, one: 'Alumni',        many: 'Alumni', rule: true, sprites: false },
 };
 
 // Group PEOPLE into [{ key, label, members }], ordered by ROLES[].order.

@@ -2,24 +2,22 @@
    Deliberately all-blocky and all-caps; the other content pages are not.
    Kept separate from site.css so the shared chrome stays untouched. */
 
-/* Uppercase is presentational only — src/data/people.js keeps the real
-   capitalization so author lists elsewhere can render names normally. */
-.roster { margin: 0; text-transform: uppercase; }
+/* Roster in the readable body mono (not the blocky display font), as authored
+   (no forced uppercase). A bit larger than body text on the other pages. */
+.roster { margin: 0; }
 
-.roster-group + .roster-group { margin-top: 18px; }
+.roster-group + .roster-group { margin-top: 14px; }
 
-/* Role label ("PI:", "PHD STUDENTS:"). */
+/* Role label ("PI:", "PhD students:"). */
 .roster-group h2 {
-  font-family: 'Jersey 10', monospace;
+  font-family: var(--font-body);
   font-weight: normal;
-  font-size: 30px;
-  letter-spacing: 1px;
+  font-size: 22px;
   color: var(--muted);
   margin: 0;
 }
 
-/* Names stay in the display font too — this page is deliberately all-blocky,
-   unlike the other content pages. Inherits family/size from the h2. */
+/* Names in the same body mono; inherit size from the h2. */
 .roster-names {
   color: var(--ink);
 }
