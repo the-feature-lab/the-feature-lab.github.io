@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magma Lab — body color picker</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #05060a; color: #ddd;
+      font-family: ui-monospace, Menlo, Consolas, monospace; }
+    #app { position: fixed; inset: 0; }
+    .panel { position: fixed; top: 16px; left: 16px; z-index: 10;
+      background: rgba(10,12,18,0.85); border: 1px solid #333; border-radius: 8px;
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .row { display: flex; align-items: center; gap: 10px; }
+    .tag { width: 40px; font-size: 12px; color: #9ab; text-transform: uppercase; letter-spacing: 0.06em; }
+    input[type=color] { width: 48px; height: 34px; border: none; background: none; cursor: pointer; }
+    input[type=text] { width: 96px; background: #05060a; color: #ddd; border: 1px solid #444;
+      border-radius: 4px; padding: 6px 8px; font: inherit; }
+    button { background: #1c2432; color: #ddd; border: 1px solid #444; border-radius: 4px;
+      padding: 6px 10px; font: inherit; cursor: pointer; }
+    button:hover { background: #263247; }
+    .hint { font-size: 12px; color: #888; max-width: 240px; line-height: 1.4; }
+    code { color: #c0d0ff; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="panel">
+    <div class="row">
+      <span class="tag">body</span>
+      <input type="color" id="bodyPick" value="#3a4657" />
+      <input type="text" id="bodyHex" value="#3a4657" spellcheck="false" />
+      <button data-copy="bodyHex">copy</button>
+    </div>
+    <div class="row">
+      <span class="tag">lava</span>
+      <input type="color" id="lavaPick" value="#d23f2e" />
+      <input type="text" id="lavaHex" value="#d23f2e" spellcheck="false" />
+      <button data-copy="lavaHex">copy</button>
+    </div>
+    <div class="hint">Two tints for the RESOURCES (magma) planet. Set your picks as
+      <code>MAGMA_BODY_COLOR</code> and <code>MAGMA_LAVA_COLOR</code> in
+      <code>src/config.js</code>.</div>
+  </div>
+  <script type="module" src="./magmalab.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Timer } from 'three';
-import { PIXEL_SIZE, STAR_BASE_PX, SUBSTEPS, DEFAULT_CUBE_COLOR, FROG_COUNT } from './config.js';
+import { PIXEL_SIZE, STAR_BASE_PX, SUBSTEPS, DEFAULT_CUBE_COLOR, FROG_COUNT, MAGMA_BODY_COLOR, MAGMA_LAVA_COLOR } from './config.js';
 import { PhysicsWorld } from './engine/physics.js';
 import { Stage } from './scene/stage.js';
 import { Lighting } from './scene/lighting.js';
@@ -73,14 +73,21 @@ const sign = new TextRows(scene, {
 // so planets can sit anywhere; outer two are raised, middle lowered (a gentle
 // upward-cupping arc). Sizes per spec: PEOPLE largest, RESEARCH medium, ABOUT smaller.
 const planets = spawnPlanets(scene, camera, renderer, {
+  // Four planets on a symmetric, gently upward-cupping arc centered on x=0:
+  // outer pair raised, inner pair lowered. Left→right: RESEARCH, PEOPLE,
+  // RESOURCES, ABOUT.
   planets: [
-    { file: '/planets/planet_sorbetlike.glb', label: 'RESEARCH', diameter: 1.7, pos: [-4.4, -4.1], href: '/research/' },
-    { file: '/planets/planet_earthlike.glb',  label: 'PEOPLE',   diameter: 1.7, pos: [0, -4.7], href: '/people/',
+    { file: '/planets/planet_sorbetlike.glb',   label: 'RESEARCH',  diameter: 1.7,   pos: [-5.3, -3.9], href: '/research/' },
+    { file: '/planets/planet_earthlike.glb',    label: 'PEOPLE',    diameter: 1.7,   pos: [-1.8, -4.7], href: '/people/',
       // One little character per lab member, recolored from their sprite block.
       // (Rocket hidden for now — re-enable with `rocket: { target: grid.centerCube() }`.)
       walker: { sprites: spritedPeople().map((p) => p.sprite) } },
-    { file: '/planets/planet_spiky.glb',      label: 'ABOUT',    diameter: 1.4, pos: [4.4, -4.1], href: '/about/' },
+    { file: '/planets/planet_magma.glb',        label: 'RESOURCES', diameter: 1.425, pos: [1.8, -4.7], href: '/resources/', bodyColor: MAGMA_BODY_COLOR, lavaColor: MAGMA_LAVA_COLOR },
+    { file: '/planets/planet_spiky.glb',        label: 'ABOUT',     diameter: 1.4,   pos: [5.3, -3.9], href: '/about/' },
   ],
+  // Both planets and frogs share the canvas cursor; planets.update() runs last,
+  // so it OR's in the frog hover to keep the pointer cursor over a frog too.
+  extraHover: () => frogs.isHovering(),
 });
 
 const hud = new HUD(document.getElementById("hud"));

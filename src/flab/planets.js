@@ -11,6 +11,48 @@ import {
   ROCKET_LAUNCH_DUR, ROCKET_LAUNCH_DIST,
 } from '../config.js';
 
+// Repaint specific texels of a planet's base-color atlas — used to retint the
+// magma planet's body (a lone near-black texel that vanishes against space) and
+// its lava cracks, without disturbing the rest. We copy the atlas image to a
+// canvas, overwrite the given texels, and swap in a CanvasTexture that matches
+// the GLB's own sampler settings (nearest filter, flipY=false, sRGB). Each entry
+// is { texels: [[x,y], ...], color }, in the atlas' own pixels (top-down; the
+// magma atlas indexes UVs directly). Null-color entries are skipped.
+function recolorPlanetTexels(root, entries) {
+  root.traverse((o) => {
+    if (!o.isMesh || !o.material || !o.material.map) return;
+    const src = o.material.map.image;
+    if (!src || !src.width) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = src.width;
+    canvas.height = src.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(src, 0, 0);
+    for (const { texels, color } of entries) {
+      if (!color) continue;
+      ctx.fillStyle = color;
+      for (const [x, y] of texels) ctx.fillRect(x, y, 1, 1);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.flipY = false; // match the GLB's texture
+    tex.needsUpdate = true;
+
+    o.material = o.material.clone();
+    o.material.map = tex;
+    o.material.needsUpdate = true;
+  });
+}
+
+// The magma atlas texels each region samples (top-down in its 512² atlas; found
+// by decoding TEXCOORD_0). Body is one texel; the lava cracks span two.
+const MAGMA_BODY_TEXELS = [[263, 40]];
+const MAGMA_LAVA_TEXELS = [[248, 39], [248, 40]];
+
 // A small CLICKABLE rocket planted on the planet's BACK face (−Z), nose out.
 // While idle it's parented to `parent` (the spinGroup) so it rotates with the
 // planet, and grows on hover. On click (`launch()`) it detaches into world space
@@ -225,7 +267,7 @@ function meanSurfaceRadius(model, fallback) {
 //   stroll the planet's surface (see flab/walker.js).
 //   -> { update(dt), setPointer(ndcX, ndcY) }
 // ---------------------------------------------------------------------------
-export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 20250822 }) {
+export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 20250822, extraHover = null }) {
   const rng = mulberry32(seed);
   const items = [];              // { group, spinGroup, axis, rate, hovered, scale }
 
@@ -273,6 +315,14 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
       model.updateMatrixWorld(true);
       item.walkRadius = meanSurfaceRadius(model, item.radius);
       if (item.walkers) for (const w of item.walkers) w.radius = item.walkRadius;
+
+      // Opt-in retint of the magma planet's body and/or lava-crack texels.
+      if (spec.bodyColor || spec.lavaColor) {
+        recolorPlanetTexels(model, [
+          { texels: MAGMA_BODY_TEXELS, color: spec.bodyColor },
+          { texels: MAGMA_LAVA_TEXELS, color: spec.lavaColor },
+        ]);
+      }
 
       spinGroup.add(model);
       model.traverse((o) => { if (o.isMesh) item.meshes.push(o); });
@@ -361,7 +411,10 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
     // Rocket hover only when its planet body isn't the thing under the pointer.
     const rocket = planet ? null : pickRocket();
     for (const it of items) if (it.rocket) it.rocket.hovered = (it.rocket === rocket);
-    renderer.domElement.style.cursor = (planet || rocket) ? 'pointer' : '';
+    // planets.update() runs last each frame, so it owns the final cursor word:
+    // OR in the frog colony's hover so a hovered frog also shows the pointer.
+    renderer.domElement.style.cursor =
+      (planet || rocket || extraHover?.()) ? 'pointer' : '';
   }
 
   const q = new THREE.Quaternion();

@@ -46,7 +46,7 @@ export const VIEW_HEIGHT = 14;     // world height shown on screen (ortho)
 export const CAMERA_POS = [-2, 1.5, 21];
 // Content bounding half-extents (world units) used to fit-to-screen so FLAB +
 // the planets are fully visible on any aspect (phones included), with margin.
-export const CONTENT_HALF_W = 6.2;   // half-width  (planets span ~±4.4 + radius/labels)
+export const CONTENT_HALF_W = 7.2;   // half-width  (planets span ~±5.3 + radius/labels)
 export const CONTENT_HALF_H = 6.2;   // half-height (FLAB top ~+5, planet labels ~−5.7)
 export const VIEW_MARGIN = 1.12;     // extra breathing room around the content (×)
 // Saved view expires after this many ms of not visiting — then it refits fresh.
@@ -87,6 +87,11 @@ export const PLANET_HOVER_SPEED = 8.0;   // scale-lerp rate (higher = snappier)
 // planet are parented to its spin group, so they turn with it.
 export const PLANET_SPIN_MIN = 0.04;   // rad/s (~26 s per revolution)
 export const PLANET_SPIN_MAX = 0.10;   // rad/s (~63 s ... ~10 s per revolution)
+// The magma (RESOURCES) planet is recolored on load by repainting two atlas
+// texels: the body (stock #1f1f1f near-black, which vanishes against space) and
+// the lava cracks (stock #d23f2e). Null on either = leave that one as-is.
+export const MAGMA_BODY_COLOR = '#694d6f'; // deep muted purple (readable on black)
+export const MAGMA_LAVA_COLOR = '#ffffff'; // white cracks
 // Rocket on the People planet's back: clickable — grows on hover, launches on
 // click (flies out along its nose, then eases back to the pad).
 export const ROCKET_HEIGHT = 0.9;      // rocket height as a fraction of planet radius

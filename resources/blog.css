@@ -1,0 +1,283 @@
+/* Blog post styling. The navbar keeps the site's blocky/mono fonts (via
+   site.css), but the post reads in a neutral system sans-serif (lm.pub's "page
+   font") or a Spectral serif (dkarkada.xyz's) — reader-switchable, along with
+   fg/bg colors, via the controls panel (see post.js). Code stays mono. */
+
+/* Roboto (default sans, matching jax-ml scaling-book), self-hosted variable
+   weight — no runtime CDN dependency. */
+@font-face { font-family: 'Roboto'; font-style: normal; font-weight: 300 700; font-display: swap; src: url('/fonts/Roboto-latin.woff2') format('woff2'); }
+
+/* Spectral (serif option), self-hosted so there's no runtime CDN dependency. */
+@font-face { font-family: 'Spectral'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/Spectral-400.woff2') format('woff2'); }
+@font-face { font-family: 'Spectral'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/Spectral-500.woff2') format('woff2'); }
+@font-face { font-family: 'Spectral'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/Spectral-600.woff2') format('woff2'); }
+@font-face { font-family: 'Spectral'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/Spectral-700.woff2') format('woff2'); }
+@font-face { font-family: 'Spectral'; font-style: italic; font-weight: 400; font-display: swap; src: url('/fonts/Spectral-400i.woff2') format('woff2'); }
+@font-face { font-family: 'Spectral'; font-style: italic; font-weight: 600; font-display: swap; src: url('/fonts/Spectral-600i.woff2') format('woff2'); }
+
+/* Named font stacks + default theme, at :root so the post column AND the
+   body-level TOC / controls panel all share them. --font-prose selects the
+   active family (set by the controls panel); --fg / --bg are reader overrides.
+   Default theme copied from jax-ml scaling-book (dark mode). */
+:root {
+  --font-sans: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen,
+               Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: 'Spectral', Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-code: Menlo, Monaco, "Lucida Console", Consolas, monospace;
+  --font-prose: var(--font-sans);
+  --fg: #e8e8e8;
+  --bg: #1c1c1d;
+}
+
+.post-main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 96px;
+  font-family: var(--font-prose);
+  color: var(--fg);
+}
+
+/* The reader bg tints the whole viewport behind the post, not just the column.
+   Defaults to the scaling-book dark background; the panel overrides inline. */
+body.post-page { background: #1c1c1d; }
+
+.post-header {
+  margin-bottom: 40px;
+}
+
+.post-title {
+  font-family: var(--font-prose);
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--fg);
+  margin: 0 0 14px;
+}
+
+/* Distill-style author block: labeled columns with rules above and below. */
+.post-byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 3em;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  padding: 0.85em 0;
+  margin-top: 4px;
+  font-family: var(--font-prose);
+}
+.post-byline .byline-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 110px;
+}
+.post-byline .byline-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--fg) 55%, transparent);
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+.post-byline .byline-value {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--fg);
+}
+
+/* --- prose ------------------------------------------------------------- */
+.post-body {
+  font-family: var(--font-prose);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--fg);
+}
+
+.post-body p { margin: 0 0 20px; }
+
+/* Section headings get a rule above them to break up the flow — a stronger one
+   before each h2, a lighter one before each h3. */
+.post-body h2 {
+  font-family: var(--font-prose);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--fg);
+  margin: 52px 0 16px;
+  padding-top: 26px;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+}
+
+.post-body h3 {
+  font-family: var(--font-prose);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 34px 0 10px;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 11%, transparent);
+}
+
+/* Link color from the scaling-book theme (magenta). Borders/code backgrounds
+   derive from currentColor so they stay sensible if the reader recolors text. */
+/* Color alone indicates links — no underline. */
+.post-body a { color: var(--link, #79c3b4); text-decoration: none; }
+.post-body a:visited { color: var(--link-visited, var(--link, #79c3b4)); }
+.post-body a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.post-body ul, .post-body ol { margin: 0 0 20px; padding-left: 1.4em; }
+.post-body li { margin: 5px 0; }
+
+.post-body strong, .post-body b { font-weight: 700; }
+
+.post-body blockquote {
+  margin: 20px 0;
+  padding: 2px 18px;
+  border-left: 3px solid var(--link, #79c3b4);
+  color: color-mix(in srgb, var(--fg) 65%, transparent);
+}
+
+.post-body code {
+  font-family: var(--font-code);
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.post-body pre {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0 0 20px;
+}
+.post-body pre code { background: none; padding: 0; font-size: 0.85em; }
+
+.post-body img { max-width: 100%; height: auto; border-radius: 8px; }
+
+.post-body hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  margin: 40px 0;
+}
+
+/* KaTeX: keep display math from overflowing narrow screens. */
+.post-body .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+
+/* --- callouts (::: callout ... :::) ----------------------------------- */
+/* Faintly-outlined inset boxes for asides like the "Illustrative papers"
+   blocks — a slightly lifted background + hairline border to break the flow.
+   Colors derive from the reader theme so they adapt to any fg/bg. */
+.post-body .callout {
+  margin: 24px 0;
+  padding: 14px 20px;
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  border-radius: 8px;
+  font-size: 0.92em;
+}
+.post-body .callout > :first-child { margin-top: 0; }
+.post-body .callout > :last-child { margin-bottom: 0; }
+
+/* Callout title: a bold label with a rule under it spanning the full box width
+   (negative margins cancel the callout's horizontal padding so the line reaches
+   both edges). */
+.post-body .callout-title {
+  font-weight: 700;
+  margin: 0 -20px 12px;
+  padding: 0 20px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+}
+/* Tighter internal rhythm than body prose. */
+.post-body .callout p { margin: 0 0 10px; }
+.post-body .callout ul, .post-body .callout ol { margin: 0; }
+.post-body .callout li { margin: 3px 0; }
+
+/* --- floating table of contents (left rail) --------------------------- */
+.post-toc {
+  position: fixed;
+  top: 120px;
+  left: 24px;
+  width: 200px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  z-index: 40;
+}
+.post-toc .toc-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--fg) 55%, transparent);
+  margin-bottom: 0.7em;
+}
+.post-toc a {
+  display: block;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  text-decoration: none;
+  padding: 0.18em 0;
+  transition: color 0.15s ease;
+}
+.post-toc a:hover { color: var(--link, #79c3b4); }
+.post-toc a.toc-active { color: var(--link, #79c3b4); font-weight: 600; }
+.post-toc a.toc-h3 { padding-left: 1.8em; font-size: 0.76rem; }
+
+/* Hide the left rail when there isn't room for it beside the 720px column
+   (720 + ~2×230 for rails ≈ 1180). Below that the post reads full-width. */
+@media (max-width: 1180px) {
+  .post-toc { display: none; }
+}
+
+/* --- reader controls panel -------------------------------------------- */
+.reader-controls {
+  position: fixed;
+  top: 76px;               /* clear of the navbar */
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(10, 12, 18, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: #ddd;
+  backdrop-filter: blur(6px);
+}
+.reader-controls .rc-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.reader-controls .rc-label { color: #9aa; letter-spacing: 0.03em; text-transform: uppercase; font-size: 11px; }
+.reader-controls select {
+  background: #05060a; color: #ddd; border: 1px solid #444; border-radius: 5px;
+  padding: 4px 6px; font: inherit;
+}
+.reader-controls input[type="color"] {
+  width: 34px; height: 26px; border: 1px solid #444; border-radius: 5px;
+  background: none; cursor: pointer; padding: 0;
+}
+.reader-controls .rc-reset {
+  background: #1c2432; color: #ccd; border: 1px solid #444; border-radius: 5px;
+  padding: 5px 8px; font: inherit; cursor: pointer;
+}
+.reader-controls .rc-reset:hover { background: #263247; }
+
+/* A small toggle to hide/show the panel. */
+.reader-controls-toggle {
+  position: fixed;
+  top: 76px; right: 16px; z-index: 51;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 12, 18, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: #ccd; cursor: pointer; font-size: 15px;
+  font-family: var(--font-sans);
+}
+.reader-controls[hidden], .reader-controls-toggle[hidden] { display: none; }

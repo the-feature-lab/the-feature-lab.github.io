@@ -1,0 +1,58 @@
+/* Resources page. Placeholder prose for now; will grow into a blog + resources
+   index. Kept separate from site.css so the shared chrome stays untouched. */
+
+.page-blurb {
+  font-family: var(--font-body);
+  font-size: 17px;
+  color: var(--muted);
+  margin: 0 0 34px;
+}
+
+.page-blurb + .page-blurb { margin-top: 22px; }
+
+.page-blurb a { color: var(--accent); }
+.page-blurb a:hover { color: var(--ink); }
+
+/* --- post list --------------------------------------------------------- */
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.post-card {
+  display: block;
+  padding: 20px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.post-card:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.post-card-title {
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+.post-card:hover .post-card-title { color: var(--accent); }
+
+.post-card-meta {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.post-card-desc {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}

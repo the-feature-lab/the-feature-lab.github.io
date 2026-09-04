@@ -83,33 +83,46 @@ export class BloomPass {
       depthWrite: false,
     });
 
-    // Separable Gaussian: sampled with a fixed 9-tap kernel, `uDir` picks the
-    // axis and `uStep` the tap spacing (radius / taps) in UV units.
+    // Separable Gaussian. The old version used a fixed 9-tap kernel and spread
+    // the taps to fit `radius` — so at large radius the taps sat many pixels
+    // apart with nothing sampled between them, producing 9 discrete copies whose
+    // overlaps rippled into visible light/dark bands. Instead we keep the taps a
+    // fixed ~1 texel apart (`uStep` = one blur-texel) and take a FIXED number of
+    // them (MAX_TAPS), Gaussian-weighting each by its distance from a sigma that
+    // scales with radius. So radius only reshapes the weights, never opens gaps.
     this.blurMat = new THREE.ShaderMaterial({
       uniforms: {
         tSrc: { value: null },
-        uDir: { value: new THREE.Vector2(1, 0) },
-        uStep: { value: new THREE.Vector2(0, 0) },
+        uStep: { value: new THREE.Vector2(0, 0) }, // one blur-texel on the axis
+        uSigma: { value: 1.0 },                    // gaussian sigma, in texels
       },
       vertexShader: VERT,
       fragmentShader: /* glsl */ `
         precision highp float;
         varying vec2 vUv;
         uniform sampler2D tSrc;
-        uniform vec2 uDir;   // (1,0) horizontal or (0,1) vertical
-        uniform vec2 uStep;  // per-tap offset in UV, already axis-scaled
+        uniform vec2 uStep;   // one blur-texel step on the active axis (UV)
+        uniform float uSigma; // gaussian sigma in texels (scales with radius)
+
+        // Fixed tap budget. Taps are one texel apart, so this also caps the
+        // effective radius; sized to comfortably cover the default glow. The
+        // linear filter integrates within each texel, so there are no gaps.
+        const int MAX_TAPS = 48;
+
         void main() {
-          // 9-tap Gaussian (weights sum to 1).
-          float w[5];
-          w[0] = 0.227027; w[1] = 0.194594; w[2] = 0.121621;
-          w[3] = 0.054054; w[4] = 0.016216;
-          vec3 acc = texture2D(tSrc, vUv).rgb * w[0];
-          for (int i = 1; i < 5; i++) {
-            vec2 off = uStep * float(i);
-            acc += texture2D(tSrc, vUv + off).rgb * w[i];
-            acc += texture2D(tSrc, vUv - off).rgb * w[i];
+          float inv2s2 = 1.0 / (2.0 * uSigma * uSigma);
+          vec3 acc = texture2D(tSrc, vUv).rgb;   // center, weight exp(0)=1
+          float wsum = 1.0;
+          for (int i = 1; i <= MAX_TAPS; i++) {
+            float d = float(i);
+            float w = exp(-d * d * inv2s2);
+            if (w < 0.0015) break;               // negligible tail; stop early
+            vec2 off = uStep * d;
+            acc += (texture2D(tSrc, vUv + off).rgb +
+                    texture2D(tSrc, vUv - off).rgb) * w;
+            wsum += 2.0 * w;
           }
-          gl_FragColor = vec4(acc, 1.0);
+          gl_FragColor = vec4(acc / wsum, 1.0);
         }
       `,
       depthTest: false,
@@ -203,20 +216,20 @@ export class BloomPass {
     this.brightMat.uniforms.uThreshold.value = this.threshold;
     this._draw(this.brightMat, this.brightTarget);
 
-    // (b) separable Gaussian blur. Tap spacing = radius spread over the kernel,
-    // in UV units of the (downsampled) blur buffer.
-    const spread = this.radius / DOWNSAMPLE; // radius in blur-buffer pixels
-    const stepX = spread / 4 / this._bw; // 4 = outermost kernel tap index
-    const stepY = spread / 4 / this._bh;
+    // (b) separable Gaussian blur. Taps stay one blur-texel apart (no gaps to
+    // ripple); the requested output `radius` becomes a gaussian sigma measured
+    // in blur-buffer texels, which reshapes the weights without spreading taps.
+    const sigma = Math.max(0.5, this.radius / DOWNSAMPLE / 2); // ~radius covers 2 sigma
+    this.blurMat.uniforms.uSigma.value = sigma;
 
-    // Horizontal: brightTarget -> blurA.
+    // Horizontal: brightTarget -> blurA. uStep = one texel on the X axis.
     this.blurMat.uniforms.tSrc.value = this.brightTarget.texture;
-    this.blurMat.uniforms.uStep.value.set(stepX, 0);
+    this.blurMat.uniforms.uStep.value.set(1 / this._bw, 0);
     this._draw(this.blurMat, this.blurA);
 
-    // Vertical: blurA -> blurB.
+    // Vertical: blurA -> blurB. uStep = one texel on the Y axis.
     this.blurMat.uniforms.tSrc.value = this.blurA.texture;
-    this.blurMat.uniforms.uStep.value.set(0, stepY);
+    this.blurMat.uniforms.uStep.value.set(0, 1 / this._bh);
     this._draw(this.blurMat, this.blurB);
 
     // (c) convex composite: glow*blur + (1-glow)*base -> canvas.

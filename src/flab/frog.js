@@ -358,6 +358,7 @@ export function spawnFrogs(scene, grid, camera, count) {
 
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2(-2, -2);
+  let hovering = false;               // is a frog under the pointer right now?
 
   function addFrog(slot) {
     const f = new Frog(scene, grid, colony, slot);
@@ -412,7 +413,11 @@ export function spawnFrogs(scene, grid, camera, count) {
       }
       for (const f of frogs) f.hovered = (f === hit);
       for (const f of frogs) f.update(dt);
+      hovering = hit !== null;
     },
+    // Whether a frog is under the pointer (drives the pointer cursor, OR'd in by
+    // planets since both share renderer.domElement.style.cursor).
+    isHovering() { return hovering; },
     setEnabled(on) {
       enabled = on;
       for (const f of frogs) if (f.group) f.group.visible = on;
