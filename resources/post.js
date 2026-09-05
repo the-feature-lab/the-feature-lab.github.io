@@ -97,7 +97,10 @@ function initTableOfContents() {
     nav.appendChild(a);
     linkFor.set(h.id, a);
   }
-  document.body.appendChild(nav);
+  // Insert as the first child of <body> so it's in normal flow (below the
+  // navbar) — position:sticky then keeps it below the navbar during top
+  // overscroll instead of overlapping it (see .post-toc in blog.css).
+  document.body.insertBefore(nav, document.body.firstChild);
 
   // Active-section highlight: the last heading whose top has scrolled above a
   // line ~a quarter down the viewport. Recomputed on scroll/resize (rAF-throttled)

@@ -278,12 +278,18 @@ body.post-page { background: #1c1c1d; }
 .post-body .callout li { margin: 3px 0; }
 
 /* --- floating table of contents (left rail) --------------------------- */
+/* Sticky (not fixed) + floated left so it sits in normal flow below the navbar
+   and moves WITH the page during top overscroll (no navbar overlap), then
+   sticks once scrolled past. Floated out of the centered post column into the
+   left gutter. */
 .post-toc {
-  position: fixed;
-  top: 120px;
-  left: 24px;
+  float: left;
+  position: sticky;
+  top: 110px;             /* clear the navbar (~95px) so it never overlaps it */
   width: 200px;
-  max-height: calc(100vh - 160px);
+  margin-left: 24px;
+  margin-right: -224px;   /* don't consume column width — sit in the gutter */
+  max-height: calc(100vh - 130px);
   overflow-y: auto;
   font-family: var(--font-sans);
   font-size: 0.8rem;
