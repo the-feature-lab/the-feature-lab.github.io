@@ -10,7 +10,7 @@ Every math-heavy discipline of science grows to rely on a cultivated toolbox of 
 
 It's useful to sit down once in a while and enumerate the workhorse tools. Doing so is like organizing your toolbox: it's nice to give some structure to your tools, and it's illuminating to see which ones you use often and which you don't. (Having your techniques organized is also very useful when it comes time to teach young folks, which is largely why we're putting it up publicly like this. If you're an aspiring learning mechanic, these are more or less the tools to learn!)
 
-We hold a Learning Wednesday every week where we gather and jointly learn about or work through some topic, and so we sat down last week and sorted through our toolbox. What follows is our list of most-used math tools, tricks, and techniques, organized into coarse categories. The goal here is to enumerate these things, not to teach how to use them — we'll mostly just name things here for the sake of brevity, leaving the reader to learn things on his or her own — but we'll give some motivation for each and offer some papers from us or colleagues which use some of the tools at hand.
+We hold a Learning Wednesday every week where we gather and jointly learn about or work through some topic, and so we sat down last week and sorted through our toolbox. What follows is our list of most-used math tools, tricks, and techniques, organized into coarse categories. The goal here is to enumerate these things, not to teach how to use them — we'll mostly just name things here for the sake of brevity, leaving the reader to learn things on their own — but we'll give some motivation for each and offer some papers from us or colleagues which use some of the tools at hand.
 
 ## Tools for linear systems
 
@@ -19,13 +19,13 @@ These are tools to try when you notice you have a *linear system.* There are lot
 This superposition behavior shows up in lots of contexts. In a surprising number of cases, you can usefully cast a system under study as a linear operator on some space. To give two examples:
 
 - In linear (and kernel) regression, the predicted function $\hat{f}(\cdot)$ is a linear function of the true target function $f_*(\cdot)$. (See e.g. [Simon et al. (2021)](https://arxiv.org/abs/2110.03922).)
-- Most systems (incl deep learning systems) given a small perturbation can be reasonably approximated to first order (see the next section), in which case you get a matrix of stimulus-response partial derivatives (i.e. a Jacobian) as the main object of study, and this Jacobian is a linear operator. (In a deep sense, this is the entire neural tangent kernel story.)
+- Most systems (including deep learning systems) given a small perturbation can be reasonably approximated to first order (see the next section), in which case you get a matrix of stimulus-response partial derivatives (i.e. a Jacobian) as the main object of study, and this Jacobian is a linear operator. (In a deep sense, this is the entire neural tangent kernel story.)
 
 Tools for linear systems include:
 
 ### Eigeneverything
 
-If you have a square matrix, ask about its eigensystem. If you have a rectangular matrix, take its SVD. If you have a linear operator acting on some space, find its eigenfunctions and eigenvalues with respect to the relevant distribution. We've gotten a ridiculous amount of mileage out of doing this.
+If you have a square matrix, ask about its eigensystem, and its SVD if it's asymmetric. If you have a rectangular matrix, take its SVD. If you have a linear operator acting on some space, find its eigenfunctions and eigenvalues with respect to the relevant distribution. We've gotten a ridiculous amount of mileage out of doing this.
 
 ::: callout Illustrative papers
 - [Saxe et al. (2013)](https://arxiv.org/abs/1312.6120) on deep linear nets;
@@ -70,7 +70,7 @@ $$
 \frac{d \ [\mathbf{A}^{-1}]_{ij}}{d \ A_{k \ell}} = -[\mathbf{A}^{-1}]_{ik} [\mathbf{A}^{-1}]_{\ell j}.
 $$
 
-Derivatives of matrix expressions can't always be written out in closed form like this, but it's useful to know the cases that can, and why they can, so you can spot em in the wild.
+Derivatives of matrix expressions can't always be written out in closed form like this, but it's useful to know the cases that can, and why they can, so you can spot 'em in the wild.
 
 ::: callout Illustrative papers
 [Simon et al. (2021)](https://arxiv.org/abs/2110.03922) and [Simon et al. (2023b)](https://arxiv.org/abs/2311.14646), which use matrix derivatives in deriving the central eigenframeworks.
@@ -81,7 +81,7 @@ Derivatives of matrix expressions can't always be written out in closed form lik
 The Gram-Schmidt process takes in a sequence of arbitrary vectors (or functions, or general elements of an inner-product space) and returns an orthonormalized version of that sequence. Often this is just a numerical convenience, but sometimes it's actually the right conceptual way to understand system dynamics.
 
 ::: callout Illustrative paper
-in [Karkada et al. (2025b)](https://arxiv.org/abs/2510.14878), we found that kernel eigensystems w.r.t. real data distributions can be very well predicted by a Gram-Schmidt process.
+In [Karkada et al. (2025b)](https://arxiv.org/abs/2510.14878), we found that kernel eigensystems w.r.t. real data distributions can be very well predicted by a Gram-Schmidt process.
 :::
 
 ### Kernels generally
@@ -122,7 +122,7 @@ On the other hand, it's often simpler to think about a small discrete set of obj
 ::: callout Illustrative papers
 Discrete → Continuous:
 
-- The Discretization Hypothesis in [the learning mechanics perspective paper](link) is essentially a conjecture that the ground-truth processes in deep learning are fundamentally continuous;
+- The Discretization Hypothesis in [the learning mechanics perspective paper](https://arxiv.org/abs/2604.21691) is essentially a conjecture that the ground-truth processes in deep learning are fundamentally continuous;
 - any paper that studies gradient flow as a proxy for gradient descent;
 - any paper that studies infinite-width nets as a proxy for finite-width nets.
 
@@ -147,7 +147,7 @@ We get tons of use out of taking limits in which system parameters go to zero or
 You should get very comfortable with taking limits to simplify systems. It's worth noting that these limits often need to be taken jointly: for example, one obtains the gradient flow limit of gradient descent not just by taking the learning rate $\eta$ to zero, but by taking the number of steps $T$ to grow to infinity, holding the "effective time" $\tau := \eta \cdot T$ constant. Use limits as tools to aid your understanding, but as with approximations, be sure not to throw the baby out with the bathwater.
 
 ::: callout Illustrative paper
-See Section 2.2 of [the learning mechanics perspective paper](link) for an extended discussion.
+See Section 2.2 of [the learning mechanics perspective paper](https://arxiv.org/abs/2604.21691) for an extended discussion.
 :::
 
 ## Scaling arguments
@@ -182,7 +182,7 @@ Scaling arguments are particularly useful when applied to hyperparameters.
 - [Yang and Hu (2020)](https://arxiv.org/abs/2011.14522) and [Yang et al. (2023)](https://arxiv.org/abs/2310.17813), which give joint scaling arguments for width and learning rate;
 - [Atanasov et al. (2024)](https://arxiv.org/abs/2410.04642), which gives joint scaling arguments for learning rate and feature output multiplier.
 
-Also see Section 2.4 of the [learning mechanics perspective paper](link) for a detailed discussion of hyperparameter scaling arguments.
+Also see Section 2.4 of the [learning mechanics perspective paper](https://arxiv.org/abs/2604.21691) for a detailed discussion of hyperparameter scaling arguments.
 :::
 
 ### Dimensional analysis
