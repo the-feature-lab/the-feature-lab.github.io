@@ -36,11 +36,76 @@ function parseFrontmatter(raw) {
   return { meta, body: m[2] };
 }
 
+// --- notes (tooltip / sidenote / footnote) ---------------------------------
+// A post's [SIDENOTE: ...] and [FOOTNOTE: ...] markers all render in ONE style,
+// chosen by the post's `notes:` frontmatter (tooltip | sidenote | footnote;
+// default tooltip). Collected post-wide (shared numbering + a single footnotes
+// list at the end), so this state is reset per post via startNotes().
+let noteState = { style: 'tooltip', notes: [] };
+function startNotes(style) {
+  noteState = { style: (style || 'tooltip'), notes: [] };
+}
+
+// Pull [SIDENOTE:/FOOTNOTE: ...] markers out to @@NOTE<n>@@ placeholders,
+// collecting each note's markdown body. Bracket-balanced so a note can contain
+// markdown links.
+function extractNotes(md) {
+  const OPENERS = ['[SIDENOTE:', '[FOOTNOTE:'];
+  let out = '', i = 0;
+  while (i < md.length) {
+    const opener = OPENERS.find((o) => md.startsWith(o, i));
+    if (!opener) { out += md[i++]; continue; }
+    let depth = 1, j = i + opener.length;
+    for (; j < md.length && depth > 0; j++) {
+      if (md[j] === '[') depth++;
+      else if (md[j] === ']') depth--;
+    }
+    const body = md.slice(i + opener.length, j - 1).trim();
+    const n = noteState.notes.length;
+    noteState.notes.push(body);
+    out += `@@NOTE${n}@@`;
+    i = j;
+  }
+  return out;
+}
+
+// Turn a placeholder into inline HTML per the active note style. tooltip/footnote
+// use a numbered superscript; sidenote floats an aside into the margin.
+function renderNoteMarker(n) {
+  const num = n + 1;
+  const inner = marked.parseInline(noteState.notes[n]);
+  if (noteState.style === 'sidenote') {
+    return `<aside class="sidenote">${inner}</aside>`;
+  }
+  if (noteState.style === 'footnote') {
+    return `<sup class="fn-ref" id="fnref-${num}"><a href="#fn-${num}">${num}</a></sup>`;
+  }
+  // tooltip (default): superscript that reveals a hover card.
+  return `<span class="fn"><sup>${num}</sup>` +
+         `<span class="fn-tooltip">${inner}</span></span>`;
+}
+
+// If the post uses footnote style, render the collected notes as a list at the
+// end of the article. Empty otherwise.
+function footnotesSection() {
+  if (noteState.style !== 'footnote' || !noteState.notes.length) return '';
+  const items = noteState.notes.map((body, i) => {
+    const num = i + 1;
+    return `<li id="fn-${num}">${marked.parseInline(body)} ` +
+           `<a class="fn-backref" href="#fnref-${num}">↩</a></li>`;
+  }).join('\n');
+  return `<section class="footnotes-section">\n<hr />\n<h2>Notes</h2>\n` +
+         `<ol class="footnotes-list">\n${items}\n</ol>\n</section>`;
+}
+
 // Protect math spans from markdown before rendering, then restore them, so
 // markdown never eats `_`, `*`, or `\` inside $...$ / $$...$$ (e.g. `_{ij}`
 // would otherwise become <em>). We pull math out to placeholders, run marked,
 // and splice the raw math back in for the client-side KaTeX pass (see post.js).
 function renderMarkdownWithMath(md) {
+  // Pull notes out first (they may contain markdown links).
+  const noteMd = extractNotes(md);
+
   const store = [];
   const stash = (tex) => {
     const key = `@@MATH${store.length}@@`;
@@ -49,13 +114,15 @@ function renderMarkdownWithMath(md) {
   };
   // Display math first ($$...$$), then inline ($...$). The inline pattern avoids
   // matching `$$` and doesn't span blank lines.
-  let protectedMd = md
+  let protectedMd = noteMd
     .replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => stash(`$$${tex}$$`))
     .replace(/(?<!\$)\$(?!\$)([^\n$]+?)\$(?!\$)/g, (_, tex) => stash(`$${tex}$`));
 
   let html = marked.parse(protectedMd);
-  // Restore. Placeholders may sit inside <p> (inline) or alone (display).
+  // Restore math. Placeholders may sit inside <p> (inline) or alone (display).
   html = html.replace(/@@MATH(\d+)@@/g, (_, i) => store[Number(i)]);
+  // Restore notes per the active style.
+  html = html.replace(/@@NOTE(\d+)@@/g, (_, i) => renderNoteMarker(Number(i)));
   return html;
 }
 
@@ -180,7 +247,8 @@ function build() {
     const { meta, body } = parseFrontmatter(raw);
     if (meta.hidden) continue;
 
-    const bodyHtml = renderBody(body);
+    startNotes(meta.notes);            // reset note numbering + pick style
+    const bodyHtml = renderBody(body) + footnotesSection();
 
     // Write the post page.
     const outDir = path.join(OUT_DIR, slug);

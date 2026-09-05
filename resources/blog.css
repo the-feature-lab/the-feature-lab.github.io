@@ -167,6 +167,87 @@ body.post-page { background: #1c1c1d; }
 /* KaTeX: keep display math from overflowing narrow screens. */
 .post-body .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
 
+/* --- notes: three styles, chosen per-post (notes: frontmatter) --------- */
+
+/* (1) tooltip: a superscript number that reveals a hover card (cf. lm.pub). */
+.post-body .fn { position: relative; cursor: pointer; white-space: nowrap; }
+.post-body .fn > sup {
+  color: var(--link, #79c3b4);
+  font-size: 0.72em;
+  font-weight: 600;
+  padding: 0 0.1em;
+}
+.post-body .fn-tooltip {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  width: min(420px, 80vw);
+  background: color-mix(in srgb, var(--fg) 8%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+  border-radius: 6px;
+  padding: 0.65em 0.85em;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--fg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  white-space: normal;
+  z-index: 100;
+}
+.post-body .fn:hover .fn-tooltip,
+.post-body .fn:focus .fn-tooltip { display: block; }
+.post-body .fn-tooltip a { color: var(--link, #79c3b4); text-decoration: none; }
+.post-body .fn-tooltip a:hover { text-decoration: underline; }
+
+/* (2) footnote: superscript ref + a collected Notes list at the post's end. */
+.post-body .fn-ref { font-size: 0.72em; font-weight: 600; }
+.post-body .fn-ref a { color: var(--link, #79c3b4); text-decoration: none; }
+.footnotes-section {
+  margin-top: 48px;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--fg) 85%, transparent);
+}
+.footnotes-section hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  margin-bottom: 1em;
+}
+.footnotes-section h2 {
+  font-size: 1.1rem; font-weight: 600; margin: 0 0 0.6em;
+  border: none; padding: 0;
+}
+.footnotes-list { padding-left: 1.4em; line-height: 1.6; }
+.footnotes-list li { margin-bottom: 0.5em; }
+.footnotes-list a { color: var(--link, #79c3b4); text-decoration: none; }
+.fn-backref { margin-left: 0.3em; color: color-mix(in srgb, var(--fg) 55%, transparent); }
+
+/* (3) sidenote: float into the right margin beside the text column (cf. lm.pub).
+   On narrow screens they collapse into an indented block in the flow. */
+.post-body .sidenote {
+  float: right;
+  clear: right;
+  width: 220px;
+  margin-right: -252px;   /* pull out past the 720px column's right edge */
+  margin-left: 1.5em;
+  margin-top: 0.25em;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+}
+.post-body .sidenote a { color: var(--link, #79c3b4); text-decoration: none; }
+.post-body .sidenote a:hover { text-decoration: underline; }
+
+@media (max-width: 1180px) {
+  .post-body .sidenote {
+    float: none;
+    width: auto;
+    margin: 14px 0;
+    padding: 8px 14px;
+    border-left: 2px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  }
+}
+
 /* --- callouts (::: callout ... :::) ----------------------------------- */
 /* Faintly-outlined inset boxes for asides like the "Illustrative papers"
    blocks — a slightly lifted background + hairline border to break the flow.
