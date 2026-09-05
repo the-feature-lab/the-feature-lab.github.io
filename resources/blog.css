@@ -96,6 +96,10 @@ body.post-page { background: #1c1c1d; }
 
 .post-body p { margin: 0 0 20px; }
 
+/* Small scroll-margin so a jumped-to heading doesn't sit pinned to the very
+   pixel edge — the navbar is in-flow (scrolls away), so no need to clear it. */
+.post-body h2, .post-body h3 { scroll-margin-top: 12px; }
+
 /* Section headings get a rule above them to break up the flow — a stronger one
    before each h2, a lighter one before each h3. */
 .post-body h2 {

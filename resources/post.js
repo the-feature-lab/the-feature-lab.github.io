@@ -83,6 +83,10 @@ function initTableOfContents() {
   title.textContent = 'Contents';
   nav.appendChild(title);
 
+  // While > now, scroll-driven highlight updates are suppressed (set on TOC
+  // click so the animated scroll doesn't override the clicked section).
+  let scrollLockUntil = 0;
+
   const linkFor = new Map();
   for (const h of headings) {
     const a = document.createElement('a');
@@ -93,18 +97,29 @@ function initTableOfContents() {
       e.preventDefault();
       document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
       history.replaceState(null, '', `#${h.id}`);
+      // Make the clicked section authoritative immediately, and ignore the
+      // scroll events fired during the smooth-scroll animation (which would
+      // otherwise settle the highlight on an intermediate section).
+      setActive(h.id);
+      scrollLockUntil = Date.now() + 900;
     });
     nav.appendChild(a);
     linkFor.set(h.id, a);
   }
-  // Insert as the first child of <body> so it's in normal flow (below the
-  // navbar) — position:sticky then keeps it below the navbar during top
-  // overscroll instead of overlapping it (see .post-toc in blog.css).
+  // Insert as the first child of <body> so it's in normal flow — position:sticky
+  // then keeps it moving with the page (below the navbar) during top overscroll
+  // instead of overlapping it (see .post-toc in blog.css).
   document.body.insertBefore(nav, document.body.firstChild);
 
-  // Active-section highlight: the last heading whose top has scrolled above a
-  // line ~a quarter down the viewport. Recomputed on scroll/resize (rAF-throttled)
-  // — simpler and more reliable than relying on IntersectionObserver edge cases.
+  // Active-section highlight: the last heading whose top has scrolled above an
+  // anchor line near the top of the viewport. Keeping the line HIGH (a small
+  // fixed offset, not a fraction of the viewport) is what avoids an off-by-one
+  // on short sections: when a heading is clicked and scrolled to the top, only
+  // IT is above the line, not the next heading a short distance below.
+  // Recomputed on scroll/resize (rAF-throttled). At the very bottom of the
+  // page, force the nearest heading active (short trailing sections may never
+  // reach the line).
+  const ANCHOR = 40; // px from viewport top (just below where jumps land, ~12px)
   let activeId = null;
   const setActive = (id) => {
     if (id === activeId) return;
@@ -113,10 +128,30 @@ function initTableOfContents() {
     if (id) linkFor.get(id)?.classList.add('toc-active');
   };
   const recompute = () => {
-    const line = window.innerHeight * 0.28;
-    let best = headings[0].id; // default to the first section near the top
+    // At the page bottom, later sections can't reach the anchor line (not
+    // enough scroll room), so pick the heading nearest the top of the viewport
+    // from the group that's visible — i.e. the last heading whose top is above
+    // the anchor, OR, if we're bottomed out, whichever heading is closest to
+    // the anchor from either side. This avoids an off-by-one on short trailing
+    // sections while keeping mid-page behavior stable.
+    const atBottom =
+      window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+
+    let best = headings[0].id;
+    let bestAbove = null;
     for (const h of headings) {
-      if (h.getBoundingClientRect().top <= line) best = h.id; else break;
+      if (h.getBoundingClientRect().top <= ANCHOR) bestAbove = h.id;
+    }
+    if (bestAbove) best = bestAbove;
+
+    if (atBottom) {
+      // Choose the heading whose top is closest to the anchor line.
+      let closest = best, dist = Infinity;
+      for (const h of headings) {
+        const d = Math.abs(h.getBoundingClientRect().top - ANCHOR);
+        if (d < dist) { dist = d; closest = h.id; }
+      }
+      best = closest;
     }
     setActive(best);
   };
@@ -124,7 +159,10 @@ function initTableOfContents() {
   const onScroll = () => {
     if (ticking) return;
     ticking = true;
-    requestAnimationFrame(() => { recompute(); ticking = false; });
+    requestAnimationFrame(() => {
+      if (Date.now() >= scrollLockUntil) recompute(); // skip during click-scroll
+      ticking = false;
+    });
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
