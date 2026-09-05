@@ -166,6 +166,9 @@ body.post-page { background: #1c1c1d; }
 
 /* KaTeX: keep display math from overflowing narrow screens. */
 .post-body .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+/* Inline math must never break across lines mid-equation. (Display math lives in
+   .katex-display and scrolls instead, so exclude it from the nowrap.) */
+.post-body .katex:not(.katex-display .katex) { white-space: nowrap; }
 
 /* --- notes: three styles, chosen per-post (notes: frontmatter) --------- */
 
