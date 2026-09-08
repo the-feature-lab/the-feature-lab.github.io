@@ -247,6 +247,7 @@ RMT is a workhorse of deep learning theory. We don't often use formal techniques
 
 If by "math trick" we mean something that makes it easier to perform a calculation, notational tricks are also worth including. For example, Einstein notation's super useful for keeping track of big tensor contractions. Another recent lab favorite is [Penrose graphical notation](https://en.wikipedia.org/wiki/Penrose_graphical_notation), which lets you track tensor contractions visually. Much easier than any inline symbolic notation we know, and has saved us many headaches (and resulted in many pretty diagrams left on whiteboards). Worth noting that both of these notational schemes help with deriving and using the linear algebraic identities discussed above.
 
+<!-- STRUCK for now — restore to bring back the "Tools we mostly don't use" section.
 ## Tools we mostly don't use
 
 We really don't find ourselves using the following:
@@ -258,6 +259,7 @@ We really don't find ourselves using the following:
 - most bounds + inequalities, excepting a few basic ones like Jensen's and Cauchy-Schwarz.
 
 We mention these because these things get a lot of airtime and tend to be rather flashy and fashionable, but we really haven't found them that useful for doing meaningful science work. Your mileage may vary, and there are indeed occasional papers we like, from authors we admire, that rely on each of these! However, the whole point we're writing this is to highlight the (often unglamorous) useful tools… so do select the right tool for the job, don't select jobs based on which tools you want to use.
+-->
 
 ---
 
