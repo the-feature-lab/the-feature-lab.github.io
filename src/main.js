@@ -80,8 +80,10 @@ const planets = spawnPlanets(scene, camera, renderer, {
     { file: '/planets/planet_sorbetlike.glb',   label: 'RESEARCH',  diameter: 1.7,   pos: [-5.3, -3.9], href: '/research/' },
     { file: '/planets/planet_earthlike.glb',    label: 'PEOPLE',    diameter: 1.7,   pos: [-1.8, -4.7], href: '/people/',
       // One little character per lab member, recolored from their sprite block.
-      // (Rocket hidden for now — re-enable with `rocket: { target: grid.centerCube() }`.)
-      walker: { sprites: spritedPeople().map((p) => p.sprite) } },
+      walker: { sprites: spritedPeople().map((p) => p.sprite) },
+      // A camera resting on the back face — clickable (grows on hover; walkers
+      // steer around it). Click -> the (unlisted) lab photos page.
+      camera: { onClick: () => { window.location.href = '/photos/'; } } },
     { file: '/planets/planet_magma.glb',        label: 'RESOURCES', diameter: 1.425, pos: [1.8, -4.7], href: '/resources/', bodyColor: MAGMA_BODY_COLOR, lavaColor: MAGMA_LAVA_COLOR },
     { file: '/planets/planet_spiky.glb',        label: 'ABOUT',     diameter: 1.4,   pos: [5.3, -3.9], href: '/about/' },
   ],
@@ -132,7 +134,7 @@ window.addEventListener('pointermove', (e) => {
 // a planet doesn't misfire — `click` alone fires on release regardless of where
 // the press began).
 const CLICK_SLOP = 6; // px of movement still counts as a click, not a drag
-let downPlanet = null, downRocket = null, downFrog = null, downX = 0, downY = 0;
+let downPlanet = null, downRocket = null, downProp = null, downFrog = null, downX = 0, downY = 0;
 
 function setPointerFromEvent(e) {
   const nx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -143,10 +145,13 @@ function setPointerFromEvent(e) {
 
 renderer.domElement.addEventListener('pointerdown', (e) => {
   setPointerFromEvent(e);
-  // Precedence: planet body > rocket > frog.
-  downPlanet = planets.pick();
-  downRocket = downPlanet ? null : planets.pickRocket();
-  downFrog = (downPlanet || downRocket) ? null : frogs.pick();
+  // Frontmost-by-depth among planet body / rocket / camera prop; frog only if
+  // none of those is under the pointer.
+  const hit = planets.pickTopmost();
+  downPlanet = hit.planet;
+  downRocket = hit.rocket;
+  downProp = hit.prop;
+  downFrog = (downPlanet || downRocket || downProp) ? null : frogs.pick();
   downX = e.clientX; downY = e.clientY;
 });
 
@@ -154,17 +159,19 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
   setPointerFromEvent(e);
   if (moved <= CLICK_SLOP) {
-    const planet = planets.pick();
-    if (planet && planet.href && planet === downPlanet) {
-      window.location.href = planet.href;
-    } else if (downRocket && planets.pickRocket() === downRocket) {
+    const hit = planets.pickTopmost(); // frontmost by depth on release
+    if (hit.planet && hit.planet.href && hit.planet === downPlanet) {
+      window.location.href = hit.planet.href;
+    } else if (downRocket && hit.rocket === downRocket) {
       downRocket.launch(); // click the rocket -> it blasts off and returns
+    } else if (downProp && hit.prop === downProp) {
+      downProp.click(); // click the camera -> fires its onClick hook
     } else if (downFrog) {
       const frog = frogs.pick();
       if (frog && frog === downFrog) frogs.split(frog); // click a frog -> it splits
     }
   }
-  downPlanet = downRocket = downFrog = null;
+  downPlanet = downRocket = downProp = downFrog = null;
 });
 
 // ---------------------------------------------------------------------------

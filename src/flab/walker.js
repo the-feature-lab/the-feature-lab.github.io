@@ -47,12 +47,15 @@ export class Walker {
   // `parent` is the planet's spinGroup; `radius` its surface radius.
   // `sprite` is a person's { model, head, skin, shirt, pants, eyes } block from
   // data/people.js; it picks the GLB and recolors it.
-  constructor(parent, radius, { sprite = null, file = null, phase = Math.random() * Math.PI * 2 } = {}) {
+  constructor(parent, radius, { sprite = null, file = null, phase = Math.random() * Math.PI * 2, avoid = null } = {}) {
     this.parent = parent;
     this.radius = radius;
     this.sprite = sprite;
     this.model = sprite?.model || 'guy';
     this.file = file || `/cube_${this.model}.glb`;
+    // Optional keep-out zone on the sphere: { dir: unit Vector3, radius: radians }.
+    // The walker steers its heading away when it wanders inside this cap.
+    this.avoid = avoid;
 
     this.group = new THREE.Group();
     parent.add(this.group);
@@ -84,6 +87,7 @@ export class Walker {
     this._axis = new THREE.Vector3();
     this._x = new THREE.Vector3();
     this._z = new THREE.Vector3();
+    this._avoidScratch = new THREE.Vector3();
     this._q = new THREE.Quaternion();
     this._m = new THREE.Matrix4();
   }
@@ -195,6 +199,24 @@ export class Walker {
       // Gently drift the heading so paths curve instead of running dead straight.
       this._drift += dt * 0.6;
       this.h.applyAxisAngle(this.p, Math.sin(this._drift) * WALKER_TURN * dt).normalize();
+
+      // Keep-out zone: if inside the avoid cap, steer the heading toward the
+      // outward (away-from-center) tangent direction so the walker leaves.
+      if (this.avoid) {
+        const cosAng = this.p.dot(this.avoid.dir);
+        if (cosAng > Math.cos(this.avoid.radius)) {
+          // Tangent at p pointing away from avoid.dir: project -dir onto the
+          // tangent plane at p, normalize. Steer h toward it.
+          const away = this._avoidScratch.copy(this.avoid.dir).multiplyScalar(-1);
+          away.addScaledVector(this.p, -away.dot(this.p)); // tangent component
+          if (away.lengthSq() > 1e-6) {
+            away.normalize();
+            // Rotate h toward `away` by a firm step (stronger the deeper in).
+            const depth = (cosAng - Math.cos(this.avoid.radius)) / (1 - Math.cos(this.avoid.radius));
+            this.h.lerp(away, Math.min(1, (0.5 + depth) * dt * 4)).normalize();
+          }
+        }
+      }
 
       // Step forward along the great circle through p in direction h.
       this._axis.crossVectors(this.p, this.h).normalize();

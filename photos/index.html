@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photos — the feature lab</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <!-- Paint dark immediately so there's no white flash before the CSS loads. -->
+  <style>html,body{background:#05060a;margin:0}</style>
+  <!-- Preload the display font so it's ready before first paint (avoids FOUT). -->
+  <link rel="preload" href="/fonts/Jersey10.ttf" as="font" type="font/ttf" crossorigin />
+</head>
+<body>
+  <main>
+    <div class="page-title"><h1>PHOTOS</h1></div>
+    <!-- Photos are rendered by photos.js from src/data/photos.js. -->
+    <div id="gallery" class="gallery"></div>
+  </main>
+  <script type="module" src="./photos.js"></script>
+</body>
+</html>

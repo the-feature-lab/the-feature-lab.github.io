@@ -99,6 +99,12 @@ export const ROCKET_HOVER_SCALE = 1.25;  // grow factor on hover (from its base)
 export const ROCKET_HOVER_SPEED = 10.0;  // hover scale-lerp rate
 export const ROCKET_LAUNCH_DUR = 2.2;    // seconds for the launch-and-return arc
 export const ROCKET_LAUNCH_DIST = 3.0;   // how far it flies out (× planet radius)
+// Camera prop resting on the People planet's back: static, grows on hover,
+// clickable. Walkers steer around it (see CAMERA_AVOID_RADIUS).
+export const CAMERA_HEIGHT = 0.175;      // camera height as a fraction of planet radius
+export const CAMERA_HOVER_SCALE = 1.25;  // grow factor on hover (from its base)
+export const CAMERA_HOVER_SPEED = 10.0;  // hover scale-lerp rate
+export const CAMERA_AVOID_RADIUS = 0.9;  // walkers avoid within this arc-angle (radians) of it
 
 // --- Frog -----------------------------------------------------------------
 // Little walkers that stroll around a planet's surface (see flab/walker.js).

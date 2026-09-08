@@ -1,0 +1,32 @@
+/* Photos — an unlisted page of lab pictures. Styled like RESEARCH, but its
+   title icon is the camera GLB render rather than a planet, and it has no
+   navbar entry: you can reach it by URL, and once you navigate away the navbar
+   gives you no way back. */
+
+.gallery { margin: 0; }
+
+.photo + .photo { margin-top: 34px; }
+
+.photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+.photo figcaption {
+  font-family: 'Jersey 10', monospace;
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+/* Who's in the shot: its own line, a size down and dimmer than the caption. */
+.photo figcaption .who {
+  display: block;
+  font-size: 18px;
+  color: #8e8a7e;
+  margin-top: 2px;
+}

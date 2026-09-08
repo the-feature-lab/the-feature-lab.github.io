@@ -20,7 +20,7 @@ const POST_SLUGS = blogPostSlugs();
 // In dev, requesting the slash-less form (/people) falls through to the root
 // index.html instead of the page. This plugin redirects /people -> /people/ so
 // dev matches GitHub Pages, which auto-adds the trailing slash in production.
-const PAGE_DIRS = ['research', 'people', 'resources', 'about', 'manybody', 'spritelab', 'magmalab', 'froggame'];
+const PAGE_DIRS = ['research', 'people', 'resources', 'about', 'manybody', 'spritelab', 'magmalab', 'froggame', 'photos'];
 // Post pages live one level under /resources/ (e.g. /resources/useful-math-tricks).
 const POST_DIRS = POST_SLUGS.map((s) => `resources/${s}`);
 function trailingSlashRedirect() {
@@ -70,6 +70,8 @@ export default defineConfig({
         magmalab: resolve(root, 'magmalab/index.html'),
         // Dev harness for the frog game.
         froggame: resolve(root, 'froggame/index.html'),
+        // Unlisted page of lab photos.
+        photos: resolve(root, 'photos/index.html'),
         // Generated blog posts (scripts/build-blog.mjs -> resources/<slug>/).
         ...Object.fromEntries(
           POST_SLUGS.map((s) => [`post-${s}`, resolve(root, `resources/${s}/index.html`)])

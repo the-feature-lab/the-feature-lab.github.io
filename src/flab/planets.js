@@ -9,6 +9,7 @@ import {
   PLANET_SPIN_MIN, PLANET_SPIN_MAX,
   ROCKET_HEIGHT, ROCKET_HOVER_SCALE, ROCKET_HOVER_SPEED,
   ROCKET_LAUNCH_DUR, ROCKET_LAUNCH_DIST,
+  CAMERA_HEIGHT, CAMERA_HOVER_SCALE, CAMERA_HOVER_SPEED, CAMERA_AVOID_RADIUS,
 } from '../config.js';
 
 // Repaint specific texels of a planet's base-color atlas — used to retint the
@@ -159,6 +160,74 @@ class Rocket {
     this.meshes = [];
     if (this.holder.parent) this.holder.parent.remove(this.holder);
   }
+}
+
+// A static clickable prop resting on a planet's BACK face (−Z), sitting upright
+// on the surface and rotating with the planet (parented to `parent`, the
+// spinGroup). Grows a bit on hover; `onClick` fires on click. Used for the
+// camera on the People planet. `localDir` is the surface direction it rests on
+// (unit vector in the planet's local frame) — walkers avoid this direction (see
+// spawnPlanets).
+class Prop {
+  constructor(parent, radius, {
+    file, height = CAMERA_HEIGHT, hoverScale = CAMERA_HOVER_SCALE,
+    hoverSpeed = CAMERA_HOVER_SPEED, onClick = null,
+    localDir = new THREE.Vector3(0, 0, -1),
+    spin = 0, // extra rotation (radians) about the local up (surface normal)
+  }) {
+    this.radius = radius;
+    this.onClick = onClick;
+    this.hoverScale = hoverScale;
+    this.hoverSpeed = hoverSpeed;
+    this.localDir = localDir.clone().normalize();
+    this.meshes = [];
+    this.hovered = false;
+    this._hover = 1;
+    this._model = null;
+    this._baseScale = 1;
+
+    // Holder sits on the surface at `localDir`, oriented so the model's +Y
+    // (up) points outward along the surface normal, then spun about that normal.
+    this.holder = new THREE.Group();
+    this.holder.position.copy(this.localDir).multiplyScalar(radius * 0.96);
+    const orient = new THREE.Quaternion()
+      .setFromUnitVectors(new THREE.Vector3(0, 1, 0), this.localDir);
+    if (spin) {
+      orient.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), spin));
+    }
+    this.holder.quaternion.copy(orient);
+    parent.add(this.holder);
+
+    new GLTFLoader().load(file, (gltf) => {
+      const m = gltf.scene;
+      const box = new THREE.Box3().setFromObject(m);
+      const size = new THREE.Vector3(); box.getSize(size);
+      const center = new THREE.Vector3(); box.getCenter(center);
+      const s = (radius * height) / (size.y || 1);
+      // Unscaled offset that plants the base on the surface (bottom at y=0) and
+      // centers it horizontally. Re-applied per scale so hover grows it OUTWARD
+      // from the planted base rather than symmetrically into the planet.
+      this._offset = new THREE.Vector3(-center.x, -box.min.y, -center.z);
+      m.scale.setScalar(s);
+      m.position.set(this._offset.x * s, this._offset.y * s, this._offset.z * s);
+      this.holder.add(m);
+      this._model = m;
+      this._baseScale = s;
+      m.traverse((o) => { if (o.isMesh) this.meshes.push(o); });
+    }, undefined, (err) => console.error('[planets] prop failed', file, err));
+  }
+
+  update(dt) {
+    if (!this._model) return;
+    const target = this.hovered ? this.hoverScale : 1;
+    this._hover += (target - this._hover) * (1 - Math.exp(-this.hoverSpeed * dt));
+    const s = this._baseScale * this._hover;
+    this._model.scale.setScalar(s);
+    // Keep the base planted on the surface as it grows (feet stay, top rises).
+    this._model.position.set(this._offset.x * s, this._offset.y * s, this._offset.z * s);
+  }
+
+  click() { this.onClick?.(); }
 }
 
 // A cartoonish wooden signpost planted on a planet's north pole (+Y): a thin
@@ -328,6 +397,21 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
       model.traverse((o) => { if (o.isMesh) item.meshes.push(o); });
     }, undefined, (err) => console.error('[planets] failed to load', spec.file, err));
 
+    // Opt-in: a static CLICKABLE camera resting on the planet's back face,
+    // rotating with it. `spec.camera` is { onClick }. Created before the walkers
+    // so its surface direction can be handed to them as an avoidance zone.
+    if (spec.camera) {
+      // Rest 30° north of the equator on the back face: rotate -Z toward +Y.
+      const lat = THREE.MathUtils.degToRad(30);
+      const localDir = new THREE.Vector3(0, Math.sin(lat), -Math.cos(lat)).normalize();
+      item.prop = new Prop(spinGroup, item.radius, {
+        file: '/camera.glb',
+        onClick: spec.camera.onClick,
+        localDir,
+        spin: THREE.MathUtils.degToRad(300), // turn about its local vertical (120 + 180)
+      });
+    }
+
     // Opt-in: a little character strolling around this planet's surface.
     // Parented to spinGroup so hover-scaling carries it. Deliberately NOT added
     // to item.meshes — it must not become a click/hover target for the planet.
@@ -336,10 +420,15 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
       // `sprites` is a list of per-person { model, head, skin, ... } blocks;
       // each becomes one recolored character, spaced around the planet.
       const sprites = opts.sprites || [null];
+      // If there's a prop, walkers steer to keep clear of its patch of surface.
+      const avoid = item.prop
+        ? { dir: item.prop.localDir, radius: CAMERA_AVOID_RADIUS }
+        : null;
       item.walkers = sprites.map(
         (sprite, i, arr) => new Walker(spinGroup, item.walkRadius ?? item.radius, {
           sprite,
           phase: (i / arr.length) * Math.PI * 2,
+          avoid,
         })
       );
       for (const w of item.walkers) {
@@ -382,39 +471,58 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
     pointer.set(ndcX, ndcY);
   }
 
-  // The planet currently under the pointer (or null).
-  function pick() {
-    raycaster.setFromCamera(pointer, camera);
-    for (const it of items) {
-      if (it.meshes.length && raycaster.intersectObjects(it.meshes, false).length) {
-        return it;
-      }
-    }
-    return null;
+  // Nearest intersection distance of the pointer ray with `meshes`, or Infinity.
+  function nearestDist(meshes) {
+    if (!meshes || !meshes.length) return Infinity;
+    const hits = raycaster.intersectObjects(meshes, false);
+    return hits.length ? hits[0].distance : Infinity;
   }
 
-  // The rocket under the pointer, or null (only the People planet has one).
-  function pickRocket() {
+  // Resolve what the pointer is over by TRUE depth: raycast planet bodies,
+  // rockets, and props together and keep whichever is nearest the camera. This
+  // is what makes a camera sitting IN FRONT of its planet clickable (and a
+  // planet poking out beside the camera clickable), rather than giving the
+  // planet body blanket priority. Returns { planet, rocket, prop } where at most
+  // one is non-null (the frontmost).
+  function pickTopmost() {
     raycaster.setFromCamera(pointer, camera);
+    let best = { kind: null, obj: null, dist: Infinity };
     for (const it of items) {
-      if (it.rocket?.meshes.length &&
-          raycaster.intersectObjects(it.rocket.meshes, false).length) {
-        return it.rocket;
+      const dp = nearestDist(it.meshes);
+      if (dp < best.dist) best = { kind: 'planet', obj: it, dist: dp };
+      if (it.rocket) {
+        const dr = nearestDist(it.rocket.meshes);
+        if (dr < best.dist) best = { kind: 'rocket', obj: it.rocket, dist: dr };
+      }
+      if (it.prop) {
+        const dpr = nearestDist(it.prop.meshes);
+        if (dpr < best.dist) best = { kind: 'prop', obj: it.prop, dist: dpr };
       }
     }
-    return null;
+    return {
+      planet: best.kind === 'planet' ? best.obj : null,
+      rocket: best.kind === 'rocket' ? best.obj : null,
+      prop: best.kind === 'prop' ? best.obj : null,
+    };
   }
+
+  // The planet under the pointer (frontmost thing must be the planet body).
+  function pick() { return pickTopmost().planet; }
+  // The rocket under the pointer, or null.
+  function pickRocket() { return pickTopmost().rocket; }
+  // The prop (e.g. camera) under the pointer, or null.
+  function pickProp() { return pickTopmost().prop; }
 
   function updateHover() {
-    const planet = pick();
+    // Whatever's frontmost under the pointer gets the hover (by true depth).
+    const { planet, rocket, prop } = pickTopmost();
     for (const it of items) it.hovered = (it === planet);
-    // Rocket hover only when its planet body isn't the thing under the pointer.
-    const rocket = planet ? null : pickRocket();
     for (const it of items) if (it.rocket) it.rocket.hovered = (it.rocket === rocket);
+    for (const it of items) if (it.prop) it.prop.hovered = (it.prop === prop);
     // planets.update() runs last each frame, so it owns the final cursor word:
     // OR in the frog colony's hover so a hovered frog also shows the pointer.
     renderer.domElement.style.cursor =
-      (planet || rocket || extraHover?.()) ? 'pointer' : '';
+      (planet || rocket || prop || extraHover?.()) ? 'pointer' : '';
   }
 
   const q = new THREE.Quaternion();
@@ -432,10 +540,13 @@ export function spawnPlanets(scene, camera, renderer, { planets: specs, seed = 2
         it.spinGroup.scale.setScalar(it.scale);
         if (it.walkers) for (const w of it.walkers) w.update(dt);
         if (it.rocket) it.rocket.update(dt);
+        if (it.prop) it.prop.update(dt);
       }
     },
     setPointer,
     pick,        // the planet under the pointer, or null
     pickRocket,  // the rocket under the pointer, or null
+    pickProp,    // the prop (camera) under the pointer, or null
+    pickTopmost, // { planet, rocket, prop } — frontmost by depth (≤1 non-null)
   };
 }
