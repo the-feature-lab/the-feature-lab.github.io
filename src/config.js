@@ -49,8 +49,6 @@ export const CAMERA_POS = [-2, 1.5, 21];
 export const CONTENT_HALF_W = 7.2;   // half-width  (planets span ~±5.3 + radius/labels)
 export const CONTENT_HALF_H = 6.2;   // half-height (FLAB top ~+5, planet labels ~−5.7)
 export const VIEW_MARGIN = 1.12;     // extra breathing room around the content (×)
-// Saved view expires after this many ms of not visiting — then it refits fresh.
-export const VIEW_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 
 // --- Post-processing ------------------------------------------------------
 export const PIXELATE_ON = false;  // pixelation off by default
@@ -142,7 +140,5 @@ export const FROG_LEAP_ARC = 0.0;      // no arc in space — straight-line cons
 export const FROG_LEAP_WEIGHT = 2.0;   // pick-weight of a leap when one is available
 
 // --- Persistence keys -----------------------------------------------------
-// Bump VIEW_KEY when the default framing changes so stale saved views are
-// discarded rather than overriding the new default.
-export const VIEW_KEY = 'flab.view.v6';
+// (The camera view is intentionally NOT persisted — it resets on every load.)
 export const SETTINGS_KEY = 'flab.render.settings';
