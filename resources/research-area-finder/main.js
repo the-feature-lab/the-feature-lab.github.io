@@ -70,7 +70,8 @@ const allPlaced = () => placedCount() === S.topics.length;
 
 function aggregate(view) {
   const out = {};
-  const rows = S.all.filter((r) => !isMe(r.login) && (view !== 'group' || inGroup(r.login)));
+  // everyone who responded, you included (your own points are also ringed)
+  const rows = S.all.filter((r) => view !== 'group' || inGroup(r.login));
   for (const t of S.topics) {
     const pts = rows.filter((r) => r.topic === t.name);
     const n = pts.length;
@@ -255,7 +256,7 @@ function minePanel() {
 function aggregatePanel() {
   const agg = aggregate(S.view);
   const scope = S.view === 'group' ? 'group' : 'global';
-  const people = new Set(S.all.filter((r) => !isMe(r.login) && (S.view !== 'group' || inGroup(r.login))).map((r) => lc(r.login))).size;
+  const people = new Set(S.all.filter((r) => S.view !== 'group' || inGroup(r.login)).map((r) => lc(r.login))).size;
 
   const pickRow = (name) => { S.selected = S.selected === name ? null : name; render(); };
   const row = (name, color, meta) => h('li', {
@@ -266,7 +267,7 @@ function aggregatePanel() {
   }, color ? dot(color) : h('span', { class: 'dot dot-all' }), h('span', { class: 'legend-name' }, name ?? 'All areas'), h('span', { class: 'legend-meta' }, meta));
 
   const out = [h('div', { class: 'card' },
-    h('h4', {}, S.view === 'group' ? GROUP_NAME : 'Everyone else'),
+    h('h4', {}, S.view === 'group' ? GROUP_NAME : 'Everyone'),
     h('p', { class: 'fine' }, 'Dots are averages and shaded regions show ±1 standard deviation; ringed dots are yours. Click an average (or an area below) to see its individual responses.'),
     h('ul', { class: 'legend selectable' },
       row(null, null, `${people} ${people === 1 ? 'person' : 'people'}`),
