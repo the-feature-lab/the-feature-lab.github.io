@@ -20,6 +20,7 @@ const OUT_DIR = path.join(ROOT, 'resources');
 
 // --- tiny frontmatter parser (--- ... --- at file top) ---------------------
 function parseFrontmatter(raw) {
+  raw = raw.replace(/\r\n/g, '\n'); // Windows checkouts (core.autocrlf) use CRLF
   const m = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(raw);
   if (!m) return { meta: {}, body: raw };
   const meta = {};
@@ -225,6 +226,18 @@ ${bodyHtml}
 `;
 }
 
+function manifestEntry(slug, meta, href) {
+  return {
+    slug,
+    title: meta.title || slug,
+    description: meta.description || '',
+    author: meta.author || '',
+    date: meta.date || '',
+    dateDisplay: meta.date ? displayDate(meta.date) : '',
+    href,
+  };
+}
+
 // --- main ------------------------------------------------------------------
 function build() {
   if (!fs.existsSync(BLOG_SRC)) {
@@ -247,6 +260,13 @@ function build() {
     const { meta, body } = parseFrontmatter(raw);
     if (meta.hidden) continue;
 
+    // Link entry: `href:` lists a hand-built page (e.g. an interactive tool under
+    // resources/) on the RESOURCES index without generating a post page for it.
+    if (meta.href) {
+      manifest.push(manifestEntry(slug, meta, meta.href));
+      continue;
+    }
+
     startNotes(meta.notes);            // reset note numbering + pick style
     const bodyHtml = renderBody(body) + footnotesSection();
 
@@ -262,15 +282,7 @@ function build() {
       if (fs.statSync(src).isFile()) fs.copyFileSync(src, path.join(outDir, f));
     }
 
-    manifest.push({
-      slug,
-      title: meta.title || slug,
-      description: meta.description || '',
-      author: meta.author || '',
-      date: meta.date || '',
-      dateDisplay: meta.date ? displayDate(meta.date) : '',
-      href: `/resources/${slug}/`,
-    });
+    manifest.push(manifestEntry(slug, meta, `/resources/${slug}/`));
   }
 
   // Newest first.
