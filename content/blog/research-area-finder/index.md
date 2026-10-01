@@ -4,6 +4,8 @@ description: "Place research areas by difficulty, impact and existing theory, th
 author: "FLAB"
 date: "2026-09-30"
 href: "/resources/research-area-finder/"
+# Delisted for now: the page stays reachable by direct link. Remove to relist.
+hidden: true
 ---
 
 Listing entry only. The page itself is hand-built in resources/research-area-finder/ (see the `href:` handling in scripts/build-blog.mjs).
