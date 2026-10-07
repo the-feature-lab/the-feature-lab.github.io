@@ -20,7 +20,13 @@ insert into public.topics (name, sort) values
   ('Mechanistic Interpretability', 1),
   ('Reinforcement Learning', 2),
   ('FP Quantization', 3),
-  ('Mixture of Experts', 4);
+  ('Mixture of Experts', 4),
+  ('Mixed Optimizers', 5),
+  ('Everything at Scale / SOTA', 6),
+  ('Effect of Architecture', 7),
+  ('Role of the FLOP', 8),
+  ('Distillation', 9),
+  ('Agent Ecology / Sociology', 10);
 
 create table public.placements (
   user_id      uuid not null default auth.uid() references auth.users (id) on delete cascade,

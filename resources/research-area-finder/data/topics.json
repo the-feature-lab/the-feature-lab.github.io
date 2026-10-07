@@ -3,6 +3,12 @@
     "Mechanistic Interpretability",
     "Reinforcement Learning",
     "FP Quantization",
-    "Mixture of Experts"
+    "Mixture of Experts",
+    "Mixed Optimizers",
+    "Everything at Scale / SOTA",
+    "Effect of Architecture",
+    "Role of the FLOP",
+    "Distillation",
+    "Agent Ecology / Sociology"
   ]
 }
