@@ -1,6 +1,7 @@
 # Daily Claude summaries of research-area-finder comments
 # (see resources/research-area-finder/README.md). Writes to Supabase only, so
-# no rebuild or redeploy is needed. Skips cleanly until the secrets exist.
+# no rebuild or redeploy is needed. The summary step skips cleanly until the
+# secrets exist; the keep-alive ping runs regardless.
 name: Summarize research area finder comments
 
 on:
@@ -20,6 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # Free-tier Supabase projects pause after ~7 days without activity, which
+      # takes the page down. A daily read of the public topics table (public
+      # publishable key, same one the page ships) keeps the project awake.
+      - name: Keep Supabase awake
+        run: |
+          curl -fsS -m 30 -o /dev/null \
+            -H "apikey: sb_publishable_q4FwRQVyAX3MNzz8LeZsHw_Nw2o-8bi" \
+            "https://mzwsarpqletxgtbseiwh.supabase.co/rest/v1/topics?select=name&limit=1" \
+            && echo "Supabase reachable" \
+            || echo "::warning::Supabase unreachable (project paused? restore it in the dashboard)"
+
       - name: Checkout
         uses: actions/checkout@v4
 

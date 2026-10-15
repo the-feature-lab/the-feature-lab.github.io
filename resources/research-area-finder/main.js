@@ -102,13 +102,23 @@ async function refresh() {
   });
 }
 
+const UNREACHABLE = 'Couldn’t reach the database. Please try again in a minute.';
+
+// Supabase retries a stale session against an unreachable host indefinitely,
+// so cap how long startup can wait.
+const withTimeout = (promise, ms) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new Error(UNREACHABLE)), ms)),
+]);
+
 async function act(fn) {
   try {
     S.status = '';
     await fn();
   } catch (err) {
     console.error(err);
-    S.status = err.message || String(err);
+    const msg = err.message || String(err);
+    S.status = /failed to fetch|networkerror|load failed/i.test(msg) ? UNREACHABLE : msg;
   }
   render();
 }
@@ -161,6 +171,7 @@ function pushScene() {
 function renderAuth() {
   const box = $('#auth');
   box.replaceChildren();
+  if (S.loading) return;
   if (backend.mode === 'local') {
     if (S.switching) {
       const input = h('input', { type: 'text', placeholder: 'GitHub username', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'GitHub username' });
@@ -202,6 +213,7 @@ function renderPanel() {
   const p = $('#panel');
   p.replaceChildren();
   if (S.status) p.append(h('p', { class: 'status', role: 'alert' }, S.status));
+  if (S.loading) return p.append(h('p', { class: 'fine' }, 'Connecting…'));
   if (S.view === 'mine') return p.append(S.user ? minePanel() : signInCard());
   p.append(...aggregatePanel());
 }
@@ -369,9 +381,18 @@ async function boot() {
     scene.nudge(...keys[e.key]);
   });
 
+  // Show the frame right away; the panel says "Connecting…" until data arrives.
+  S.loading = true;
+  render();
   await act(async () => {
-    S.user = await backend.init({ topics: S.topics.map((t) => t.name) });
-    await refresh();
+    try {
+      await withTimeout((async () => {
+        S.user = await backend.init({ topics: S.topics.map((t) => t.name) });
+        await refresh();
+      })(), 15000);
+    } finally {
+      S.loading = false;
+    }
   });
 }
 
