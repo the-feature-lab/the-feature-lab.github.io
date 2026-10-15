@@ -134,8 +134,36 @@ function setActive(topic) {
 }
 
 let saveTimer;
+// ---------- positions in words ----------
+// Each axis runs -1..1; six equal bins, lowest first.
+const SCALES = {
+  difficulty: ['Trivial', 'Easy', 'Moderate', 'Hard', 'Very hard', 'Near impossible'],
+  impact: ['Not important', 'Somewhat important', 'Decently important', 'Quite important', 'Very important', 'Extremely important'],
+  theory: ['No theory', 'Little theory', 'Some theory', 'Decent theory', 'Strong theory', 'Established theory'],
+};
+const AXIS_KEYS = ['difficulty', 'impact', 'theory'];
+const word = (axis, v) => SCALES[axis][Math.min(5, Math.floor(((v + 1) / 2) * 6))];
+const describe = (p) => AXIS_KEYS.map((k) => word(k, p[k])).join(' · ');
+// Disagreement from the spread across respondents (sample SD, axis range is 2).
+const spreadNote = (sd, n) => (n < 3 ? '' : sd >= 0.6 ? 'split' : sd >= 0.35 ? 'mixed' : '');
+
+function whereTable(topic, a, scopeLabel) {
+  const mine = S.mine[topic];
+  const head = h('tr', {}, h('th', {}), h('th', {}, `${scopeLabel} (n = ${a.n})`), mine ? h('th', {}, 'You') : null);
+  const rows = AXIS_KEYS.map((k) => {
+    const note = a.n ? spreadNote(a.sd[k], a.n) : '';
+    return h('tr', {},
+      h('th', { scope: 'row' }, AXES[k].name),
+      h('td', {}, a.n ? word(k, a.mean[k]) : '—', note ? h('span', { class: 'spread', title: 'Responses disagree a lot on this axis' }, ` (${note})`) : null),
+      mine ? h('td', {}, word(k, mine[k])) : null);
+  });
+  return h('table', { class: 'where' }, h('thead', {}, head), h('tbody', {}, rows));
+}
+
 function onDraft(draft, final) {
   S.draft = draft;
+  const live = $('#draft-words');
+  if (live) live.textContent = describe(draft);
   if (!final) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -257,6 +285,7 @@ function minePanel() {
         'Drag the dot to set ', h('strong', {}, 'difficulty'), ' and ', h('strong', {}, 'impact'),
         ', and drag its arrows to set ', h('strong', {}, 'existing theory'),
         '. Drag anywhere else to rotate. Changes save automatically.')),
+    h('p', { id: 'draft-words', class: 'draft-words', 'aria-live': 'polite' }, describe(S.draft)),
     h('div', { class: 'row between' },
       h('span', { class: 'saved', 'aria-live': 'polite' }, placed ? (S.saved || 'Placed') : 'Not placed yet'),
       placed ? h('button', { class: 'linklike subtle', onclick: () => act(async () => {
@@ -288,11 +317,11 @@ function aggregatePanel() {
   if (S.view === 'group' && people === 0) {
     out.push(h('p', { class: 'fine' }, 'No group members have responded yet. Group membership comes from data/whitelist.json.'));
   }
-  out.push(discussion(scope));
+  out.push(discussion(scope, agg));
   return out;
 }
 
-function discussion(scope) {
+function discussion(scope, agg) {
   const topic = S.selected ?? ALL;
   const summary = S.summaries[`${scope}|${topic}`];
   // Only the high-level summary is shown; individual comments are readable only
@@ -308,7 +337,9 @@ function discussion(scope) {
   }
 
   const block = h('div', { class: 'card discussion' },
-    h('h4', {}, `Discussion · ${S.selected ?? 'All areas'}`), sumCard);
+    h('h4', {}, `Discussion · ${S.selected ?? 'All areas'}`),
+    S.selected ? whereTable(S.selected, agg[S.selected], scope === 'group' ? 'Group' : 'Everyone') : null,
+    sumCard);
 
   if (!S.user) {
     block.append(h('p', { class: 'fine' }, 'Sign in with GitHub to add a comment.'));

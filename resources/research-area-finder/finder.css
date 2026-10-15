@@ -132,6 +132,12 @@
 .af .discussion .summary { background: color-mix(in srgb, var(--af-link) 9%, transparent); border-left: 3px solid var(--af-link); border-radius: 0 4px 4px 0; padding: 0.6em 0.8em; }
 .af .summary-label { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--af-link); }
 .af .summary p { margin: 0.35em 0; }
+.af .where { width: 100%; border-collapse: collapse; margin: 0 0 0.9em; font-size: 0.82rem; }
+.af .where th, .af .where td { text-align: left; padding: 0.3em 0.4em 0.3em 0; border-bottom: 1px solid var(--af-line-soft); vertical-align: top; }
+.af .where thead th { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--af-muted); }
+.af .where tbody th { font-weight: 600; color: var(--af-soft); white-space: nowrap; }
+.af .where .spread { color: var(--af-muted); font-size: 0.75rem; }
+.af .draft-words { font-size: 0.82rem; color: var(--fg); background: var(--af-wash); border-radius: 4px; padding: 0.4em 0.6em; }
 .af .comment-form { margin-top: 1em; border-top: 1px solid var(--af-line-soft); padding-top: 0.8em; }
 
 .af .mode-note { font-size: 0.78rem; color: var(--af-muted); margin: 0.6em 0 0; }
