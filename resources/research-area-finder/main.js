@@ -149,7 +149,7 @@ const spreadNote = (sd, n) => (n < 3 ? '' : sd >= 0.6 ? 'split' : sd >= 0.35 ? '
 
 function whereTable(topic, a, scopeLabel) {
   const mine = S.mine[topic];
-  const head = h('tr', {}, h('th', {}), h('th', {}, `${scopeLabel} (n = ${a.n})`), mine ? h('th', {}, 'You') : null);
+  const head = h('tr', {}, h('th', {}), h('th', {}, scopeLabel, h('span', { class: 'n' }, ` (n = ${a.n})`)), mine ? h('th', {}, 'You') : null);
   const rows = AXIS_KEYS.map((k) => {
     const note = a.n ? spreadNote(a.sd[k], a.n) : '';
     return h('tr', {},
